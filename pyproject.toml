@@ -1,0 +1,15 @@
+[project]
+name = "ichikas-auto-assistant"
+version = "0.1.0"
+description = """
+Ichika's Auto Assistant is a helper script 
+for Project Sekai: Colorful Stage (JP server only)
+that automates dailies.
+"""
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # 目前 kotonebot 库依赖处理还有问题，因此只能 windows 也装上
+    "kotonebot[android,windows]>=0.1.0",
+    "psutil>=7.0.0",
+]
