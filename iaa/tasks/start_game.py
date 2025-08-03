@@ -28,14 +28,16 @@ def login():
             logger.debug('Clicked 右上角菜单按钮')
 
 @action('返回首页', screenshot_mode='manual')
-def go_home():
+def go_home(threshold_timeout: float = 0):
     logger.info('Try to go home.')
     th = Throttler(1)
-    cd = Countdown(4)
+    cd = Countdown(threshold_timeout)
     for _ in Loop():
         if image.find(R.Hud.IconCrystal):
             cd.start()
             logger.debug('Crystal icon found.')
+            # 因为进入游戏后，公告弹窗会延迟弹出，因此不可以立即返回
+            # 必须等待一段时间，关掉公告后再返回
             if cd.expired():
                 logger.info('Now at home.')
                 break
@@ -51,6 +53,8 @@ def start_game():
         logger.info('Not at game. Launching...')
         d.launch_app(PACKAGE_NAME_JP)
         login()
+        go_home(4)
     else:
         logger.info('Already at game.')
-    go_home()
+        go_home()
+    
