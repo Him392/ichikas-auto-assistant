@@ -11,5 +11,10 @@ requires-python = ">=3.10"
 dependencies = [
     # 目前 kotonebot 库依赖处理还有问题，因此只能 windows 也装上
     "kotonebot[android,windows]>=0.1.0",
-    "psutil>=7.0.0",
+    "psutil",
+]
+
+[project.optional-dependencies]
+dev = [
+    "kotonebot[dev]",
 ]

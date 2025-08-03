@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "dataclasses-json",
+#     "jinja2",
+#     "opencv-python",
+#     "psutil",
+# ]
+# ///
+
 # 此脚本用于扫描图片资源并自动生成 Python 脚本
 
 from genericpath import isfile
@@ -13,7 +23,7 @@ from dataclasses_json import dataclass_json, DataClassJsonMixin
 import cv2
 from cv2.typing import MatLike
 
-PATH = '.\\kotonebot-resource\\sprites'
+PATH = '.\\resources'
 
 SpriteType = Literal['basic', 'metadata']
 
@@ -457,12 +467,12 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--ide', help='IDE 类型', default=ide_type())
     args = parser.parse_args()
 
-    if os.path.exists(r'kaa\res\sprites'):
-        shutil.rmtree(r'kaa\res\sprites')
+    if os.path.exists(r'iaa\res\sprites'):
+        shutil.rmtree(r'iaa\res\sprites')
     path = PATH + '\\jp'
     files = scan_png_files(path)
     sprites = load_sprites(path, files)
-    sprites = copy_sprites(sprites, r'kaa\res\sprites')
+    sprites = copy_sprites(sprites, r'iaa\res\sprites')
     classes = make_classes(sprites, args.ide)
     
     env = jinja2.Environment(loader=jinja2.FileSystemLoader('./tools'))
@@ -470,9 +480,10 @@ if __name__ == '__main__':
     
     template = env.get_template('R.jinja2')
     print(f'Rendering template: {template.name}')
-    with open('./kaa/tasks/R.py', 'w', encoding='utf-8') as f:
+    with open('./iaa/tasks/R.py', 'w', encoding='utf-8') as f:
         f.write(template.render(data=classes, production=args.production))
     print('Creating __init__.py')
-    with open('./kaa/sprites/__init__.py', 'w', encoding='utf-8') as f:
+    os.makedirs('./iaa/res/sprites', exist_ok=True)
+    with open('./iaa/res/sprites/__init__.py', 'w', encoding='utf-8') as f:
         f.write('')
     print('All done!')
