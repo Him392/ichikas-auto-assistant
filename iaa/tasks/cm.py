@@ -50,12 +50,16 @@ def go_intersection():
             break
 
 @action('打开 CM 界面', screenshot_mode='manual')
-def open_cm():
+def open_cm() -> bool:
     """
     前置：位于交叉路口\n
     结束：位于 CM 弹窗
+
+    :returns: 是否成功打开 CM 界面。若为 False，原因是今天的广告都看完了。
     """
     logger.info('Opening CM.')
+    swipe_count = 0
+    MAX_SWIPE_COUNT = 5
     for _ in Loop(interval=0.6):
         if image.find(R.Scene.Intersection.IconCm, threshold=0.6):
             device.click()
@@ -63,11 +67,16 @@ def open_cm():
             sleep(0.4)
         elif image.find(R.Cm.ButtonPlayCm):
             logger.debug('Now at CM.')
-            break
+            return True
         else:
             # 向左滑
             device.swipe_scaled(x1=0.7, x2=0.4, y1=0.5, y2=0.5)
             logger.debug('Swiped left.')
+            swipe_count += 1
+            if swipe_count >= MAX_SWIPE_COUNT:
+                logger.debug('Reached max swipe count but still not found. Stop.')
+                return False
+    return False
 
 @action('看广告', screenshot_mode='manual')
 def clear_common_cm():
@@ -137,5 +146,7 @@ def cm():
     """
     go_home()
     go_intersection()
-    open_cm()
-    clear_common_cm()
+    if open_cm():
+        clear_common_cm()
+    else:
+        logger.info('No ads available.')
