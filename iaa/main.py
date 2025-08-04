@@ -9,6 +9,7 @@ from kotonebot.client.implements.windows import WindowsImpl, WindowsImplConfig
 from kotonebot.backend import debug
 
 from .tasks.cm import cm
+from .tasks.live import live
 from .tasks.start_game import start_game
 
 logging.basicConfig(
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 TASKS: dict[str, Callable[[], None]] = {
     'start_game': start_game,
     'cm': cm,
+    'live': live,
 }
 DEBUG: bool = False
 
