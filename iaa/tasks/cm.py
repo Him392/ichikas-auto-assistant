@@ -13,7 +13,7 @@ def is_at_intersection() -> bool:
     return image.find_multi([
         R.Scene.Intersection.BuildingLogo,
         R.Scene.Intersection.IconCm
-    ], threshold=0.7) is not None
+    ], threshold=0.8) is not None
 
 @action('前往交叉路口', screenshot_mode='manual')
 def go_intersection():
