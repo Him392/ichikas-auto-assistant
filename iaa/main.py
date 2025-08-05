@@ -23,14 +23,14 @@ TASKS: dict[str, Callable[[], None]] = {
     'cm': cm,
     'live': live,
 }
-DEBUG: bool = False
 
 def main():
     parser = argparse.ArgumentParser(description='Run specific tasks')
     parser.add_argument('--task', '-t', type=str, help='Task name to run')
+    parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
     args = parser.parse_args()
     
-    if DEBUG:
+    if args.debug:
         debug.debug.enabled = True
         debug.debug.auto_save_to_folder = 'dumps'
     ins = Mumu12Host.list()[0]

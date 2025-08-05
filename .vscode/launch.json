@@ -11,14 +11,28 @@
             "module": "iaa.main"
         },
         {
-            "name": "main(current task)",
+            "name": "main (debug)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "iaa.main",
+            "args": ["--debug"]
+        },
+        {
+            "name": "current task",
             "type": "debugpy",
             "request": "launch",
             "module": "iaa.main",
             "args": ["--task", "${fileBasenameNoExtension}"]
         },
         {
-            "name": "main(current task) debug library",
+            "name": "current task (debug)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "iaa.main",
+            "args": ["--task", "${fileBasenameNoExtension}", "--debug"]
+        },
+        {
+            "name": "current task (justMyCode=false)",
             "type": "debugpy",
             "request": "launch",
             "module": "iaa.main",
