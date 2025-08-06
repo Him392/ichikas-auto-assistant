@@ -61,9 +61,14 @@ def open_cm() -> bool:
     swipe_count = 0
     MAX_SWIPE_COUNT = 5
     for _ in Loop(interval=0.6):
-        if image.find(R.Scene.Intersection.IconCm, threshold=0.6):
-            device.click()
-            logger.debug('Clicked CM icon.')
+        if ret := image.find(R.Scene.Intersection.IconCm, threshold=0.6):
+            # TODO: 改用 image.find 的 rect 参数重构
+            x1, y1, x2, y2 = R.Cm.BoxCmIconDetectRect.xyxy
+            x, y = ret.position
+            if x1 < x < x2 and y1 < y < y2:
+                logger.debug('CM icon is in the detection area.')
+                device.click()
+                logger.debug('Clicked CM icon.')
             sleep(0.4)
         elif image.find(R.Cm.ButtonPlayCm):
             logger.debug('Now at CM.')
