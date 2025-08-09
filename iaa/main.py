@@ -11,6 +11,8 @@ from kotonebot.backend import debug
 from .tasks.cm import cm
 from .tasks.live import live
 from .tasks.start_game import start_game
+from .context import init
+from .config.manager import read
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -28,11 +30,17 @@ def main():
     parser = argparse.ArgumentParser(description='Run specific tasks')
     parser.add_argument('--task', '-t', type=str, help='Task name to run')
     parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
+    parser.add_argument('--config', '-c', type=str, default='default', help='Configuration name to use')
     args = parser.parse_args()
     
     if args.debug:
         debug.debug.enabled = True
         debug.debug.auto_save_to_folder = 'dumps'
+    
+    # 初始化配置
+    config = read(args.config, not_exist='create')
+    init(config)
+    
     ins = Mumu12Host.list()[0]
     d = ins.create_device('nemu_ipc', MuMu12HostConfig())
     d.target_resolution = (1280, 720)
