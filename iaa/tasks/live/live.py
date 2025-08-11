@@ -175,6 +175,13 @@ def challenge_live(
         elif image.find(R.Live.ChallengeLive.TextSelectCharacter):
             logger.debug('Now at character select.')
             break
+        elif image.find(R.Live.ChallengeLive.GroupVirtualSinger):
+            # 为了防止误触某个角色，导致次数不够提示弹出来，挡住 TextSelectCharacter
+            # 文本，结果一直卡在 TextSelectCharacter 识别上。
+            # 加上这个点击用于取消次数不足提示。
+            device.click()
+            logger.debug('Clicked group virtual singer.')
+
     # 选择角色
     # HACK: 硬编码
     logger.info(f'Selecting character: {character}')
