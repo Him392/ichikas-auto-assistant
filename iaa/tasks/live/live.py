@@ -132,6 +132,7 @@ def solo_live(
         if image.find(R.Hud.ButtonLive, threshold=0.55):
             device.click()
             logger.debug('Clicked home LIVE button.')
+            sleep(1)
         elif image.find(R.Live.ButtonSoloLive):
             device.click()
             logger.debug('Clicked SoloLive button.')
@@ -166,6 +167,7 @@ def challenge_live(
         if image.find(R.Hud.ButtonLive, threshold=0.55):
             device.click()
             logger.debug('Clicked home LIVE button.')
+            sleep(1)
         elif image.find(R.Live.ButtonChallengeLive):
             if not color.find('#ff5589', rect=R.Live.BoxChallengeLiveRedDot):
                 logger.info("Today's challenge live already cleared.")
