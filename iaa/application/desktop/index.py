@@ -7,6 +7,7 @@ from tkinter import messagebox
 
 @dataclass
 class Store:
+    var_start_game: tk.BooleanVar | None = None
     var_single_live: tk.BooleanVar | None = None
     var_challenge_live: tk.BooleanVar | None = None
     var_auto_cm: tk.BooleanVar | None = None
