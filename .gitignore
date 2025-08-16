@@ -2,6 +2,12 @@ tmp
 dumps
 conf/
 .idea
+# 构建产物
+build/
+dist/
+dist_app/
+iaa_v*.zip
+iaa_v*.7z
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
