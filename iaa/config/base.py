@@ -1,7 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel
 
-from .schemas import GameConfig, LiveConfig
+from .schemas import GameConfig, LiveConfig, SchedulerConfig
 
 
 class IaaBaseTaskConfig(BaseModel):
@@ -12,3 +12,4 @@ class IaaConfig(BaseModel):
     description: str
     game: GameConfig
     live: LiveConfig
+    scheduler: SchedulerConfig = SchedulerConfig()
