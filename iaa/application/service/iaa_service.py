@@ -4,11 +4,13 @@ from functools import cached_property
 
 from .config_service import ConfigService
 from .assets_service import AssetsService
+from .scheduler import SchedulerService
 
 class IaaService:
     def __init__(self):
         self.config = ConfigService(self)
         self.assets = AssetsService(self)
+        self.scheduler = SchedulerService(self)
 
     @cached_property
     def root(self) -> str:

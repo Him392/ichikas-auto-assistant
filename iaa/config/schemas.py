@@ -36,6 +36,26 @@ class LiveConfig(BaseModel):
 
 
 class SchedulerConfig(BaseModel):
-    solo_live_enabled: bool = False
-    challenge_live_enabled: bool = False
-    cm_enabled: bool = False
+    start_game_enabled: bool = True
+    solo_live_enabled: bool = True
+    challenge_live_enabled: bool = True
+    cm_enabled: bool = True
+
+    def is_enabled(self, task_id: str) -> bool:
+        """根据任务标识判断是否启用。
+        
+        任务标识应与 `iaa.tasks.registry.REGULAR_TASKS` 的键一致，例如：
+        - "start_game"
+        - "cm"
+        - "solo_live"
+        - "challenge_live"
+        """
+        if task_id == 'start_game':
+            return bool(self.start_game_enabled)
+        if task_id == 'cm':
+            return bool(self.cm_enabled)
+        if task_id == 'solo_live':
+            return bool(self.solo_live_enabled)
+        if task_id == 'challenge_live':
+            return bool(self.challenge_live_enabled)
+        return False

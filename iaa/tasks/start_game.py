@@ -65,7 +65,7 @@ def start_game():
         
         # 检查是否需要登录
         link_account = conf().game.link_account
-        if link_account is not None:
+        if link_account != 'no':
             login(link_account)
         
         go_home(4)

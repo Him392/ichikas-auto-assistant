@@ -4,27 +4,59 @@ import ttkbootstrap as tb
 
 from .index import DesktopApp
 
+
 def build_control_tab(app: DesktopApp, parent: tk.Misc) -> None:
   # 启停区域
   lf_power = tb.Labelframe(parent, text="启停")
   lf_power.pack(fill=tk.X, padx=8, pady=(8, 12))
 
-  btn_start = tb.Button(
+  # 单一启停按钮
+  btn_toggle = tb.Button(
     lf_power,
     text="启动",
     bootstyle="success",  # type: ignore[call-arg]
     width=10,
-    command=app.on_start,
   )
-  btn_stop = tb.Button(
-    lf_power,
-    text="停止",
-    bootstyle="danger",  # type: ignore[call-arg]
-    width=10,
-    command=app.on_stop,
-  )
-  btn_start.pack(side=tk.LEFT, padx=(12, 8), pady=10)
-  btn_stop.pack(side=tk.LEFT, padx=8, pady=10)
+
+  lbl_current = tb.Label(lf_power, text="正在执行：-")
+
+  def _refresh_power_button() -> None:
+    sch = app.service.scheduler
+    is_busy = sch.is_starting or sch.is_stopping
+    btn_toggle.configure(state=(tk.DISABLED if is_busy else tk.NORMAL))
+    if sch.running:
+      btn_toggle.configure(text="停止", bootstyle="danger")  # type: ignore[call-arg]
+    else:
+      btn_toggle.configure(text="启动", bootstyle="success")  # type: ignore[call-arg]
+    # 刷新当前任务
+    lbl_current.configure(text=f"正在执行：{sch.current_task_name or '-'}")
+
+  def _on_toggle() -> None:
+    sch = app.service.scheduler
+    if sch.is_starting or sch.is_stopping:
+      return
+    if sch.running:
+      app.on_stop()
+    else:
+      app.on_start()
+    # 触发一次 UI 刷新，随后用 after 循环持续刷新几次以反映状态变化
+    _refresh_power_button()
+
+  btn_toggle.configure(command=_on_toggle)
+  btn_toggle.pack(side=tk.LEFT, padx=(12, 8), pady=10)
+  lbl_current.pack(side=tk.LEFT, padx=(8, 12))
+
+  def _schedule_refresh_loop() -> None:
+    try:
+      _refresh_power_button()
+      # 周期性刷新按钮状态（窗口仍存在时才继续）
+      if parent.winfo_exists():
+        parent.after(300, _schedule_refresh_loop)
+    except tk.TclError:
+      # 窗口销毁后可能触发异常，安全忽略
+      pass
+
+  _schedule_refresh_loop()
 
   # 任务区域
   lf_tasks = tb.Labelframe(parent, text="任务")

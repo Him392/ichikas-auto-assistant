@@ -3,11 +3,13 @@ from pydantic import BaseModel
 
 from .schemas import GameConfig, LiveConfig, SchedulerConfig
 
+CONFIG_VERSION_CODE = 1
 
 class IaaBaseTaskConfig(BaseModel):
     enabled: bool = False
 
 class IaaConfig(BaseModel):
+    version: int = CONFIG_VERSION_CODE
     name: str
     description: str
     game: GameConfig

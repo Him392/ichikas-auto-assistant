@@ -202,6 +202,16 @@ def challenge_live(
     enter_unit_select()
     start_auto_live('once')
 
+@task('单人演出')
+def task_solo_live():
+    go_home()
+    solo_live()
+
+@task('挑战演出')
+def task_challenge_live():
+    go_home()
+    challenge_live('ichika')
+
 @task('演出')
 def live():
     go_home()

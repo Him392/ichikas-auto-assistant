@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import ttkbootstrap as tb
 from ..service.iaa_service import IaaService
+from tkinter import messagebox
 
 @dataclass
 class Store:
@@ -20,6 +21,17 @@ class DesktopApp:
 
         # 服务聚合
         self.service = IaaService()
+        # 绑定错误回调：在 UI 线程弹出提示
+        def _on_scheduler_error(e: Exception) -> None:
+            try:
+                # 使用 after 确保在主线程执行 UI 操作
+                self.root.after(0, lambda: messagebox.showerror("运行错误", str(e), parent=self.root))
+            except Exception:
+                pass
+        self.service.scheduler.on_error = _on_scheduler_error
+
+        # 绑定窗口关闭事件
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # Notebook 作为主容器
         self.notebook = tb.Notebook(self.root)
@@ -46,11 +58,10 @@ class DesktopApp:
 
     # -------------------- 事件处理 --------------------
     def on_start(self) -> None:
-        selected_tasks = self._collect_selected_tasks()
-        print("[启动] 选择的任务:", selected_tasks)
+        self.service.scheduler.start_regular(run_in_thread=True)
 
     def on_stop(self) -> None:
-        print("[停止] 请求已发送")
+        self.service.scheduler.stop_regular(block=False)
 
     def _collect_selected_tasks(self) -> list[str]:
         tasks: list[str] = []
@@ -61,6 +72,25 @@ class DesktopApp:
         if self.store.var_auto_cm and self.store.var_auto_cm.get():
             tasks.append("自动 CM")
         return tasks
+
+    def _on_close(self) -> None:
+        sch = self.service.scheduler
+        if sch.running:
+            confirm = messagebox.askyesno(
+                "确认退出",
+                "当前仍在执行任务，确定要退出吗？退出将先停止任务。",
+                parent=self.root,
+            )
+            if not confirm:
+                return
+            try:
+                sch.stop_regular(block=True)
+            except Exception:
+                pass
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
 
     # -------------------- 入口 --------------------
     def run(self) -> None:
