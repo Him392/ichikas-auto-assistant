@@ -16,7 +16,7 @@ if ($Backend -notin @("pyinstaller", "nuitka")) {
 $buildDir = 'build'
 $distDir = 'dist_app'
 $exeName = 'iaa.exe'
-$iconPath = 'assets/favico.ico'
+$iconPath = 'assets/icon_round.ico'
 
 # 解析版本与时间戳
 $content = Get-Content 'pyproject.toml' -Raw

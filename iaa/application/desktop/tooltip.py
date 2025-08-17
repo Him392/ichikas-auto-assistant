@@ -2,7 +2,7 @@ import tkinter as tk
 
 
 class _HoverTooltip:
-  """简易悬浮提示。鼠标进入 3 秒后显示，离开时销毁。"""
+  """简易悬浮提示。鼠标进入 0.5 秒后显示，离开时销毁。"""
 
   def __init__(self, widget: tk.Misc, text: str) -> None:
     self.widget = widget
@@ -13,7 +13,7 @@ class _HoverTooltip:
     widget.bind("<Leave>", self._hide)
 
   def _schedule_show(self, event: tk.Event | None = None) -> None:  # noqa: ARG002
-    # 进入后 3 秒再显示，若重复进入则重置计时
+    # 进入后 0.5 秒再显示，若重复进入则重置计时
     if self.tip_window is not None:
       return
     if self._after_id is not None:
@@ -22,7 +22,7 @@ class _HoverTooltip:
       except Exception:
         pass
       self._after_id = None
-    self._after_id = self.widget.after(3000, self._do_show)
+    self._after_id = self.widget.after(500, self._do_show)
 
   def _do_show(self) -> None:
     if self.tip_window is not None:

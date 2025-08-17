@@ -1,5 +1,6 @@
 import tkinter as tk
 from dataclasses import dataclass
+import os
 
 import ttkbootstrap as tb
 from ..service.iaa_service import IaaService
@@ -22,6 +23,15 @@ class DesktopApp:
 
         # 服务聚合
         self.service = IaaService()
+        
+        # 设置窗口图标
+        try:
+            icon_path = os.path.join(self.service.root, 'assets', 'icon_round.ico')
+            if os.path.exists(icon_path):
+                self.root.iconbitmap(icon_path)
+        except Exception:
+            pass  # 如果图标设置失败，不影响程序运行
+        
         # 绑定错误回调：在 UI 线程弹出提示
         def _on_scheduler_error(e: Exception) -> None:
             try:
