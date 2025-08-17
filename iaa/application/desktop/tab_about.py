@@ -39,6 +39,7 @@ def build_about_tab(app: DesktopApp, parent: tk.Misc) -> None:
     lbl.pack(side=tk.LEFT, padx=10)
     lbl.bind("<Button-1>", lambda e: webbrowser.open(url))  # noqa: ARG005
 
-  add_link(links, "GitHub 仓库", "https://github.com/XcantloadX/ichikas-auto-assistant")
+  add_link(links, "GitHub", "https://github.com/XcantloadX/ichikas-auto-assistant")
   add_link(links, "Bilibili", "https://space.bilibili.com/3546853903698457")
-  add_link(links, "教程文档", "http://example.com") 
+  add_link(links, "教程文档", "https://p.kdocs.cn/s/AGBH56RBAAAFS")
+  add_link(links, "QQ 群", "https://qm.qq.com/q/Mu1SSfK1Gg") 
