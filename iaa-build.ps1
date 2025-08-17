@@ -22,7 +22,7 @@ $iconPath = 'assets/icon_round.ico'
 $content = Get-Content 'pyproject.toml' -Raw
 $m = [regex]::Match($content, '^[\s]*version[\s]*=[\s]*"([^"]+)"', 'Multiline')
 $version = if ($m.Success) { $m.Groups[1].Value } else { '0.0.0' }
-$stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+$stamp = Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'
 
 # 根据是否有 7z 命令决定文件扩展名
 $has7z = Get-Command 7z -ErrorAction SilentlyContinue
