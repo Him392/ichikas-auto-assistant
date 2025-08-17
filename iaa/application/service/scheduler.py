@@ -2,7 +2,6 @@
 import logging
 import threading
 import os
-from datetime import datetime
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
@@ -20,8 +19,6 @@ class SchedulerService:
         self._thread: threading.Thread | None = None
         self.__running: bool = False
         self.__stop_requested: bool = False
-        self.__logging_configured: bool = False
-        self._log_file_path: str | None = None
         self.is_starting: bool = False
         """是否正在启动"""
         self.is_stopping: bool = False
@@ -42,42 +39,6 @@ class SchedulerService:
         """调度器是否正在运行。"""
         return self.__running
 
-    def __configure_logging(self) -> None:
-        """配置日志：控制台 DEBUG + 文件 logs/YYYY-MM-DD-hh-mm-ss.log。只配置一次。"""
-        if self.__logging_configured:
-            return
-
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG)
-
-        # 控制台输出
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        console_formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-        console_handler.setFormatter(console_formatter)
-
-        # 文件输出
-        logs_dir = os.path.join(self.iaa.root, 'logs')
-        os.makedirs(logs_dir, exist_ok=True)
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-        self._log_file_path = os.path.join(logs_dir, f'{timestamp}.log')
-        file_handler = logging.FileHandler(self._log_file_path, mode='w', encoding='utf-8')
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(console_formatter)
-
-        # 避免重复添加处理器
-        existing_types = {type(h) for h in root_logger.handlers}
-        if type(console_handler) not in existing_types:
-            root_logger.addHandler(console_handler)
-        if type(file_handler) not in existing_types:
-            root_logger.addHandler(file_handler)
-
-        self.__logging_configured = True
-        logger.debug("Logging configured. File: %s", self._log_file_path)
-
     def start_regular(self, run_in_thread: bool = True) -> None:
         """
         启动常规任务调度。
@@ -87,7 +48,6 @@ class SchedulerService:
             logger.warning("Scheduler already running, skip start.")
             return
 
-        self.__configure_logging()
         self.is_starting = True
 
         def _runner() -> None:
