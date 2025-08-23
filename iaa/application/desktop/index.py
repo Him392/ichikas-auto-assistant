@@ -72,7 +72,7 @@ class DesktopApp:
         self.service.scheduler.start_regular(run_in_thread=True)
 
     def on_stop(self) -> None:
-        self.service.scheduler.stop_regular(block=False)
+        self.service.scheduler.stop(block=False)
 
     def _collect_selected_tasks(self) -> list[str]:
         tasks: list[str] = []
@@ -95,7 +95,7 @@ class DesktopApp:
             if not confirm:
                 return
             try:
-                sch.stop_regular(block=True)
+                sch.stop(block=True)
             except Exception:
                 pass
         try:

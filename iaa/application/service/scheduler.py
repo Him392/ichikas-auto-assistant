@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .iaa_service import IaaService
 
 from iaa.tasks.registry import REGULAR_TASKS, name_from_id
+from iaa.tasks.registry import MANUAL_TASKS
 from iaa.context import init as init_config_context
 
 logger = logging.getLogger(__name__)
@@ -39,10 +40,15 @@ class SchedulerService:
         """调度器是否正在运行。"""
         return self.__running
 
-    def start_regular(self, run_in_thread: bool = True) -> None:
-        """
-        启动常规任务调度。
-        """
+    # -------------------- Shared runner --------------------
+    def __start_tasks(
+        self,
+        get_tasks: Callable[[], list[tuple[str, Callable[[], None]]]],
+        *,
+        thread_name: str,
+        run_in_thread: bool = True,
+    ) -> None:
+        """执行指定任务"""
         # 已在运行则忽略
         if self._thread and self._thread.is_alive():
             logger.warning("Scheduler already running, skip start.")
@@ -55,9 +61,9 @@ class SchedulerService:
                 logger.info("Preparing context...")
                 self.__prepare_context()
                 logger.info("Scheduler started.")
-                tasks = self._get_enabled_tasks()
+                tasks = get_tasks()
                 if not tasks:
-                    logger.info("No enabled tasks. Exiting...")
+                    logger.info("No tasks to run. Exiting...")
                     return
                 self.__running = True
                 # 启动阶段结束
@@ -102,15 +108,22 @@ class SchedulerService:
                 logger.info("Scheduler stopped.")
 
         if run_in_thread:
-            self._thread = threading.Thread(target=_runner, name="IAA-Scheduler", daemon=True)
+            self._thread = threading.Thread(target=_runner, name=thread_name, daemon=True)
             self._thread.start()
         else:
-            # 在当前线程同步运行（阻塞直至 stop_regular 被调用且任务自然检查到停止信号）
             _runner()
-    
-    def stop_regular(self, block: bool = False) -> None:
+
+    def start_regular(self, run_in_thread: bool = True) -> None:
         """
-        请求停止调度并回收线程。
+        启动常规任务调度。
+        """
+        def _get() -> list[tuple[str, Callable[[], None]]]:
+            return self._get_enabled_tasks()
+        self.__start_tasks(_get, thread_name="IAA-Scheduler", run_in_thread=run_in_thread)
+    
+    def stop(self, block: bool = False) -> None:
+        """
+        请求停止任务执行并回收线程。
 
         :param block: 是否阻塞直至线程停止。
         """
@@ -124,6 +137,14 @@ class SchedulerService:
         if block:
             self._thread.join()
         self._thread = None
+
+    def run_manual(self, task_id: str, run_in_thread: bool = True) -> None:
+        """运行手动任务。"""
+        if task_id not in MANUAL_TASKS:
+            raise ValueError(f"Unknown manual task: {task_id}")
+        def _get() -> list[tuple[str, Callable[[], None]]]:
+            return [(task_id, MANUAL_TASKS[task_id])]
+        self.__start_tasks(_get, thread_name="IAA-Scheduler-Manual", run_in_thread=run_in_thread)
 
     def __prepare_context(self) -> None:
         """

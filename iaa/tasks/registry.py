@@ -1,7 +1,8 @@
 ﻿from typing import Callable
 
 from .cm import cm
-from .live import solo_live, challenge_live
+from .live import challenge_live, solo_live
+from .live.ten_songs import ten_songs
 from .start_game import start_game
 
 TaskRegistry = dict[str, Callable[[], None]]
@@ -14,7 +15,7 @@ REGULAR_TASKS: TaskRegistry = {
 }
 
 MANUAL_TASKS: TaskRegistry = {
-
+    'ten_songs': ten_songs,
 }
 
 
@@ -25,5 +26,6 @@ def name_from_id(task_id: str) -> str:
     'cm': '自动 CM',
     'solo_live': '单人演出',
     'challenge_live': '挑战演出',
+    'ten_songs': '刷歌曲首数',
   }
   return mapping.get(task_id, task_id)

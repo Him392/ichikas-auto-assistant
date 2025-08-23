@@ -5,6 +5,7 @@ from kotonebot import logging
 from kotonebot import device, image, task, Loop, action, sleep, color
 
 from iaa.tasks.live._select_song import next_song
+from ._scene import at_song_select
 
 from .. import R
 from ..start_game import go_home
@@ -20,7 +21,7 @@ def start_auto_live(
 ):
     """
     前置：位于编队界面\n
-    结束：首页
+    结束：首页或选歌界面
 
     :param auto_setting: 自动演出设置。\n
         * `"all"`: 自动演出直到 AP 不足
@@ -80,13 +81,15 @@ def start_auto_live(
                 break
         else:
             # 单次演出
-            # 结束条件是「LIVE CLEAR」提示
-            if image.find(R.Live.TextLiveClear):
-                logger.debug('Waiting for LIVE CLEAR')
-                break
+            # 结束条件是「SCORERANK」提示
+            if image.find(R.Live.TextScoreRank):
+                logger.debug('Waiting for SCORERANK')
+                sleep(1) # 等待 SCORERANK 动画完成
+                device.click_center()
+                break 
 
     # 返回位置
-    for _ in Loop():
+    for _ in Loop(interval=0.5):
         # 返回主页只要一直点就可以了
         if back_to == 'home':
             if at_home():
@@ -95,12 +98,17 @@ def start_auto_live(
             sleep(0.6)
         # 返回选歌界面要点“返回歌曲选择”按钮
         elif back_to == 'select':
-            if image.find(R.Live.ButtonGoSongSelect):
+            if image.find(R.Live.ButtonLiveCompletedNext):
+                device.click()
+                logger.debug('Clicked live completed ok button.')
+            elif image.find(R.Live.ButtonGoSongSelect):
                 device.click()
                 logger.debug('Clicked select song button.')
+            elif at_song_select():
+                logger.debug('Now at song select.')
                 break
-            device.click(1, 1)
-            sleep(0.6)
+            else:
+                logger.debug('Waiting for reward screen finished.')
 
 @action('选歌', screenshot_mode='manual')
 def enter_unit_select():
@@ -109,15 +117,16 @@ def enter_unit_select():
     结束：位于编队界面
     """
     for _ in Loop(interval=0.6):
-        if image.find(R.Live.ButtonDecide):
-            device.click()
+        if btn_start := at_song_select():
+            device.click(btn_start)
             logger.debug('Clicked start live button.')
             break
     logger.info('Song select finished.')
 
 @action('单人演出', screenshot_mode='manual')
 def solo_live(
-    songs: list[str] | Literal['single-loop'] | Literal['list-loop'] | None = None
+    songs: list[str] | Literal['single-loop'] | Literal['list-loop'] | None = None,
+    loop_count: int | None = None,
 ):
     """
     
@@ -126,7 +135,12 @@ def solo_live(
     * `"single-loop"`: 单曲循环演出
     * `"list-loop"`: 列表循环演出
     * `list[str]`: 指定要演出的歌曲列表
+    :param loop_count: 列表循环演出次数。\n
+        * `None`: 不限制次数
+        * 任意整数: 演出指定次数
     """
+    if loop_count is not None and loop_count <= 0:
+        raise ValueError('loop_count must be positive.')
     # 进入单人演出
     for _ in Loop(interval=0.6):
         if image.find(R.Hud.ButtonLive, threshold=0.55):
@@ -136,10 +150,12 @@ def solo_live(
         elif image.find(R.Live.ButtonSoloLive):
             device.click()
             logger.debug('Clicked SoloLive button.')
-        elif image.find(R.Live.ButtonDecide):
+        elif at_song_select():
             logger.debug('Now at song select.')
             break
     
+    count = 0
+    max_count = loop_count or float('inf')
     match songs:
         case None:
             enter_unit_select()
@@ -151,12 +167,14 @@ def solo_live(
                 next_song()
                 enter_unit_select()
                 start_auto_live('once', back_to='select')
-                logger.info('Song looped.')
+                logger.info(f'Song looped. {count}/{max_count}')
+                count += 1
+                if count >= max_count:
+                    break
         case songs if isinstance(songs, list):
             raise NotImplementedError('Not implemented yet.')
         case _:
             assert_never(songs)
-    start_auto_live('all')
 
 @action('挑战演出', screenshot_mode='manual')
 def challenge_live(
@@ -196,7 +214,7 @@ def challenge_live(
         elif image.find(R.Live.ChallengeLive.CharaIchika):
             device.click()
             logger.debug(f'Clicked character {character}.')
-        elif image.find(R.Live.ButtonDecide):
+        elif at_song_select():
             logger.debug('Now at song select.')
             break
     enter_unit_select()

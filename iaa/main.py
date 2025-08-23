@@ -8,6 +8,8 @@ from kotonebot.client.host.mumu12_host import MuMu12HostConfig
 from kotonebot.client.implements.windows import WindowsImpl, WindowsImplConfig
 from kotonebot.backend import debug
 
+from iaa.tasks.registry import MANUAL_TASKS, REGULAR_TASKS
+
 from .tasks.cm import cm
 from .tasks.live import live
 from .tasks.start_game import start_game
@@ -20,11 +22,10 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
-TASKS: dict[str, Callable[[], None]] = {
-    'start_game': start_game,
-    'cm': cm,
-    'live': live,
-}
+
+TASKS: dict[str, Callable[[], None]] = {}
+TASKS.update(MANUAL_TASKS)
+TASKS.update(REGULAR_TASKS)
 
 def main():
     parser = argparse.ArgumentParser(description='Run specific tasks')
