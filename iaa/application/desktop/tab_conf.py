@@ -9,6 +9,29 @@ from .toast import show_toast
 from .advance_select import AdvanceSelect
 from iaa.config.base import IaaConfig
 
+# 显示与值映射
+EMULATOR_DISPLAY_MAP: dict[EmulatorOptions, str] = {
+  'mumu': 'MuMu',
+}
+EMULATOR_VALUE_MAP: dict[str, EmulatorOptions] = {v: k for k, v in EMULATOR_DISPLAY_MAP.items()}
+
+SERVER_DISPLAY_MAP: dict[Literal['jp'], str] = {
+  'jp': '日服',
+}
+SERVER_VALUE_MAP: dict[str, Literal['jp']] = {v: k for k, v in SERVER_DISPLAY_MAP.items()}
+
+LINK_DISPLAY_MAP: dict[LinkAccountOptions, str] = {
+  'no': '不引继账号',
+  'google_play': 'Google Play',
+}
+LINK_VALUE_MAP: dict[str, LinkAccountOptions] = {v: k for k, v in LINK_DISPLAY_MAP.items()}
+
+CONTROL_IMPL_DISPLAY_MAP: dict[Literal['nemu_ipc', 'adb'], str] = {
+  'nemu_ipc': 'Nemu IPC',
+  'adb': 'ADB',
+}
+CONTROL_IMPL_VALUE_MAP: dict[str, Literal['nemu_ipc', 'adb']] = {v: k for k, v in CONTROL_IMPL_DISPLAY_MAP.items()}
+
 
 class ConfStore:
   def __init__(self):
@@ -16,6 +39,7 @@ class ConfStore:
     self.emulator_var = tk.StringVar()
     self.server_var = tk.StringVar()
     self.link_var = tk.StringVar()
+    self.control_impl_var = tk.StringVar()
     # 演出设置
     self.song_var = tk.StringVar()
     self.fully_deplete_var = tk.BooleanVar()
@@ -23,29 +47,11 @@ class ConfStore:
     self.challenge_char_vars: dict[GameCharacter, tk.BooleanVar] = {}
     # 分组多选组件实例
     self.challenge_select: Optional[AdvanceSelect[GameCharacter]] = None
-    # 映射表
-    self.emulator_value_map: dict[str, str] = {}
-    self.server_value_map: dict[str, str] = {}
-    self.link_value_map: dict[str, LinkAccountOptions] = {}
+    # 映射表（仅用于歌曲选择）
     self.song_display_to_value: dict[str, int] = {}
 
 
 def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) -> None:
-  # 显示映射
-  emulator_display_map = {
-    'mumu': 'MuMu',
-  }
-  server_display_map = {
-    'jp': '日服',
-  }
-  link_display_map = {
-    'no': '不引继账号',
-    'google_play': 'Google Play',
-  }
-  store.emulator_value_map = {v: k for k, v in emulator_display_map.items()}
-  store.server_value_map = {v: k for k, v in server_display_map.items()}
-  store.link_value_map = {v: cast(LinkAccountOptions, k) for k, v in link_display_map.items()}
-
   frame = tb.Labelframe(parent, text="游戏设置")
   frame.pack(fill=tk.X, padx=16, pady=8)
 
@@ -53,27 +59,35 @@ def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) 
   emulator_key = conf.game.emulator
   server_key = conf.game.server
   link_key = conf.game.link_account
-  store.emulator_var.set(emulator_display_map.get(emulator_key, 'MuMu'))
-  store.server_var.set(server_display_map.get(server_key, '日服'))
-  store.link_var.set(link_display_map.get(link_key, '不引继账号'))
+  control_impl_key = conf.game.control_impl
+  store.emulator_var.set(EMULATOR_DISPLAY_MAP.get(emulator_key, 'MuMu'))
+  store.server_var.set(SERVER_DISPLAY_MAP.get(server_key, '日服'))
+  store.link_var.set(LINK_DISPLAY_MAP.get(link_key, '不引继账号'))
+  store.control_impl_var.set(CONTROL_IMPL_DISPLAY_MAP.get(control_impl_key, 'Nemu IPC'))
 
   # 模拟器类型
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="模拟器类型", width=16, anchor=tk.W).pack(side=tk.LEFT)
-  tb.Combobox(row, state="readonly", textvariable=store.emulator_var, values=list(store.emulator_value_map.keys()), width=28).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.emulator_var, values=list(EMULATOR_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
 
   # 服务器
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="服务器", width=16, anchor=tk.W).pack(side=tk.LEFT)
-  tb.Combobox(row, state="readonly", textvariable=store.server_var, values=list(store.server_value_map.keys()), width=28).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.server_var, values=list(SERVER_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
 
   # 引继账号
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="引继账号", width=16, anchor=tk.W).pack(side=tk.LEFT)
-  tb.Combobox(row, state="readonly", textvariable=store.link_var, values=list(store.link_value_map.keys()), width=28).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.link_var, values=list(LINK_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
+
+  # 控制方式
+  row = tb.Frame(frame)
+  row.pack(fill=tk.X, padx=8, pady=8)
+  tb.Label(row, text="控制方式", width=16, anchor=tk.W).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.control_impl_var, values=list(CONTROL_IMPL_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
 
 
 def build_live_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) -> None:
@@ -148,17 +162,17 @@ def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG00
   inner = tb.Frame(canvas)
   inner_id = canvas.create_window((0, 0), window=inner, anchor=tk.NW)
 
-  def _on_inner_config(event: tk.Event) -> None:  # type: ignore[name-defined]
+  def _on_inner_config(event: tk.Event) -> None:
     canvas.configure(scrollregion=canvas.bbox("all"))
 
-  def _on_canvas_config(event: tk.Event) -> None:  # type: ignore[name-defined]
+  def _on_canvas_config(event: tk.Event) -> None:
     canvas.itemconfigure(inner_id, width=canvas.winfo_width())
 
   inner.bind("<Configure>", _on_inner_config)
   canvas.bind("<Configure>", _on_canvas_config)
 
   # 鼠标滚轮（限制顶部/底部不超出）
-  def _on_mousewheel(event: tk.Event):  # type: ignore[name-defined]
+  def _on_mousewheel(event: tk.Event):
     first, last = canvas.yview()
     if event.delta > 0 and first <= 0:
       return "break"
@@ -168,26 +182,26 @@ def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG00
     return "break"
 
   # Linux 鼠标滚轮
-  def _on_mousewheel_up(event: tk.Event):  # type: ignore[name-defined]
+  def _on_mousewheel_up(event: tk.Event):
     first, _ = canvas.yview()
     if first <= 0:
       return "break"
     canvas.yview_scroll(-1, "units")
     return "break"
 
-  def _on_mousewheel_down(event: tk.Event):  # type: ignore[name-defined]
+  def _on_mousewheel_down(event: tk.Event):
     _, last = canvas.yview()
     if last >= 1:
       return "break"
     canvas.yview_scroll(1, "units")
     return "break"
 
-  def _bind_mousewheel(event: tk.Event) -> None:  # type: ignore[name-defined]
+  def _bind_mousewheel(event: tk.Event) -> None:
     canvas.bind_all("<MouseWheel>", _on_mousewheel)
     canvas.bind_all("<Button-4>", _on_mousewheel_up)
     canvas.bind_all("<Button-5>", _on_mousewheel_down)
 
-  def _unbind_mousewheel(event: tk.Event) -> None:  # type: ignore[name-defined]
+  def _unbind_mousewheel(event: tk.Event) -> None:
     canvas.unbind_all("<MouseWheel>")
     canvas.unbind_all("<Button-4>")
     canvas.unbind_all("<Button-5>")
@@ -216,12 +230,14 @@ def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG00
   def on_save() -> None:
     try:
       # 游戏设置
-      emulator_val = cast(EmulatorOptions, store.emulator_value_map[store.emulator_var.get()])
-      server_val = cast(Literal['jp'], store.server_value_map[store.server_var.get()])
-      link_val = cast(LinkAccountOptions, store.link_value_map[store.link_var.get()])
+      emulator_val = EMULATOR_VALUE_MAP[store.emulator_var.get()]
+      server_val = SERVER_VALUE_MAP[store.server_var.get()]
+      link_val = LINK_VALUE_MAP[store.link_var.get()]
+      control_impl_val = CONTROL_IMPL_VALUE_MAP[store.control_impl_var.get()]
       conf.game.emulator = emulator_val
       conf.game.server = server_val
       conf.game.link_account = link_val
+      conf.game.control_impl = control_impl_val
 
       # 演出设置
       song_display = store.song_var.get()

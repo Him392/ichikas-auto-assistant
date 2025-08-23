@@ -156,13 +156,20 @@ class SchedulerService:
         # 因为导入 kotonebot 开销较大，这里延迟导入
         from kotonebot.backend.context.context import init_context
         from kotonebot.client.host import Mumu12Host
-        from kotonebot.client.host.mumu12_host import MuMu12HostConfig
+        impl = self.iaa.config.conf.game.control_impl
 
         hosts = Mumu12Host.list()
         if not hosts:
             raise RuntimeError("No MuMu host found.")
         host = hosts[0]
-        device = host.create_device('nemu_ipc', MuMu12HostConfig())
+        if impl == 'nemu_ipc':
+            from kotonebot.client.host.mumu12_host import MuMu12HostConfig
+            device = host.create_device('nemu_ipc', MuMu12HostConfig())
+        elif impl == 'adb':
+            from kotonebot.client.host import AdbHostConfig
+            device = host.create_device('adb', AdbHostConfig())
+        else:
+            raise ValueError(f"Unknown control implementation: {impl}")
         device.target_resolution = (1280, 720)
         device.orientation = 'landscape'
         init_context(target_device=device)
