@@ -4,13 +4,14 @@ from typing_extensions import assert_never
 from kotonebot import logging
 from kotonebot import device, image, task, Loop, action, sleep, color
 
-from iaa.tasks.live._select_song import next_song
-from ._scene import at_song_select
 
 from .. import R
-from ..start_game import go_home
 from ..common import at_home
-from iaa.consts import PACKAGE_NAME_JP
+from iaa.context import conf
+from ..start_game import go_home
+from ._select_song import next_song
+from ._scene import at_song_select
+from iaa.config.schemas import GameCharacter
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +179,7 @@ def solo_live(
 
 @action('挑战演出', screenshot_mode='manual')
 def challenge_live(
-    character
+    character: GameCharacter
 ):
     # 进入挑战演出
     for _ in Loop(interval=0.6):
@@ -203,17 +204,78 @@ def challenge_live(
             logger.debug('Clicked group virtual singer.')
 
     # 选择角色
-    # HACK: 硬编码
-    logger.info(f'Selecting character: {character}')
-    if character != 'ichika':
-        raise NotImplementedError('Not implemented yet.')
+    logger.info(f'Selecting character: {character.value}')
+    def to_res(ch: GameCharacter):
+        """返回 (角色贴图, 分组贴图或 None)。"""
+        match ch:
+            case GameCharacter.Miku:
+                return (R.Live.ChallengeLive.CharaMiku, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Rin:
+                return (R.Live.ChallengeLive.CharaRin, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Len:
+                return (R.Live.ChallengeLive.CharaLen, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Luka:
+                return (R.Live.ChallengeLive.CharaLuka, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Meiko:
+                return (R.Live.ChallengeLive.CharaMeiko, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Kaito:
+                return (R.Live.ChallengeLive.CharaKaito, R.Live.ChallengeLive.GroupVirtualSinger)
+
+            case GameCharacter.Ichika:
+                return (R.Live.ChallengeLive.CharaIchika, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Saki:
+                return (R.Live.ChallengeLive.CharaSaki, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Honami:
+                return (R.Live.ChallengeLive.CharaHonami, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Shiho:
+                return (R.Live.ChallengeLive.CharaShiho, R.Live.ChallengeLive.GroupLeoneed)
+
+            case GameCharacter.Minori:
+                return (R.Live.ChallengeLive.CharaMinori, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Haruka:
+                return (R.Live.ChallengeLive.CharaHaruka, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Airi:
+                return (R.Live.ChallengeLive.CharaAiri, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Shizuku:
+                return (R.Live.ChallengeLive.CharaShizuku, R.Live.ChallengeLive.GroupMoreMoreJump)
+
+            case GameCharacter.Kohane:
+                return (R.Live.ChallengeLive.CharaKohane, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.An:
+                return (R.Live.ChallengeLive.CharaAn, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.Akito:
+                return (R.Live.ChallengeLive.CharaAkito, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.Toya:
+                return (R.Live.ChallengeLive.CharaToya, R.Live.ChallengeLive.GroupVividBadSquad)
+
+            case GameCharacter.Tsukasa:
+                return (R.Live.ChallengeLive.CharaTsukasa, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Emu:
+                return (R.Live.ChallengeLive.CharaEmu, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Nene:
+                return (R.Live.ChallengeLive.CharaNene, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Rui:
+                return (R.Live.ChallengeLive.CharaRui, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+
+            case GameCharacter.Kanade:
+                return (R.Live.ChallengeLive.CharaKanade, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Mafuyu:
+                return (R.Live.ChallengeLive.CharaMafuyu, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Ena:
+                return (R.Live.ChallengeLive.CharaEna, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Mizuki:
+                return (R.Live.ChallengeLive.CharaMizuki, R.Live.ChallengeLive.Group25AtNightcord)
+            case _ as impossible:
+                assert_never(impossible)
+    
+    char_img, group_img = to_res(character)
     for _ in Loop(interval=0.6):
-        if image.find(R.Live.ChallengeLive.GroupLeoneed):
+        if group_img and image.find(group_img):
             device.click()
-            logger.debug(f'Clicked group Leo/need HARDCODED.')
-        elif image.find(R.Live.ChallengeLive.CharaIchika):
+            logger.debug('Clicked group for character.')
+        elif image.find(char_img):
             device.click()
-            logger.debug(f'Clicked character {character}.')
+            logger.debug('Clicked character.')
         elif at_song_select():
             logger.debug('Now at song select.')
             break
@@ -228,10 +290,10 @@ def task_solo_live():
 @task('挑战演出')
 def task_challenge_live():
     go_home()
-    challenge_live('ichika')
+    challenge_live(conf().challenge_live.characters[0])
 
 @task('演出')
 def live():
     go_home()
     solo_live()
-    challenge_live('ichika')
+    challenge_live(GameCharacter.Ichika)

@@ -35,13 +35,14 @@ def create(name: str, *, exist: Literal['raise', 'ok'] = 'raise') -> None:
     
     # 创建默认配置
     from .base import GameConfig, LiveConfig
-    from .schemas import SchedulerConfig
+    from .schemas import SchedulerConfig, ChallengeLiveConfig
     
     default_config = IaaConfig(
         name=name,
         description=f"Configuration for {name}",
         game=GameConfig(),
         live=LiveConfig(),
+        challenge_live=ChallengeLiveConfig(),
         scheduler=SchedulerConfig(),
     )
     
