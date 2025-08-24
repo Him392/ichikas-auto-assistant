@@ -31,6 +31,7 @@ def go_intersection():
         if image.find(R.Map.ButtonOpenMap):
             device.click()
             logger.debug('Clicked open map button.')
+            sleep(0.5)
         elif image.find(R.Map.ButtonCloseMap):
             logger.debug('Now at map.')
             break
