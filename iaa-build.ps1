@@ -24,6 +24,13 @@ $m = [regex]::Match($content, '^[\s]*version[\s]*=[\s]*"([^"]+)"', 'Multiline')
 $version = if ($m.Success) { $m.Groups[1].Value } else { '0.0.0' }
 $stamp = Get-Date -Format 'yyyy-MM-dd-HH-mm-ss'
 
+# 将版本写入 iaa/__meta__.py 供运行时读取
+$initPath = 'iaa/__meta__.py'
+$initContent = @"
+__VERSION__ = "$version"
+"@
+Set-Content -Path $initPath -Value $initContent -Encoding UTF8
+
 # 根据是否有 7z 命令决定文件扩展名
 $has7z = Get-Command 7z -ErrorAction SilentlyContinue
 $packageName = "iaa_v$version" + "_" + "$stamp" + $(if ($has7z) { ".7z" } else { ".zip" })
