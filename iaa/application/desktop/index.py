@@ -24,6 +24,12 @@ class DesktopApp:
         # 服务聚合
         self.service = IaaService()
         
+        # 设置包含版本号的窗口标题
+        try:
+            self.root.title(f"一歌小助手 v{self.service.version}")
+        except Exception:
+            pass
+        
         # 设置窗口图标
         try:
             icon_path = os.path.join(self.service.root, 'assets', 'icon_round.ico')
@@ -72,7 +78,7 @@ class DesktopApp:
         self.service.scheduler.start_regular(run_in_thread=True)
 
     def on_stop(self) -> None:
-        self.service.scheduler.stop_regular(block=False)
+        self.service.scheduler.stop(block=False)
 
     def _collect_selected_tasks(self) -> list[str]:
         tasks: list[str] = []
@@ -95,7 +101,7 @@ class DesktopApp:
             if not confirm:
                 return
             try:
-                sch.stop_regular(block=True)
+                sch.stop(block=True)
             except Exception:
                 pass
         try:

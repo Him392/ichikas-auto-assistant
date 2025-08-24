@@ -1,13 +1,255 @@
+from enum import Enum
 from typing import Literal
 from pydantic import BaseModel
+from typing_extensions import assert_never
 
 LinkAccountOptions = Literal['no', 'google_play']
 EmulatorOptions = Literal['mumu']
+
+
+class GameCharacter(str, Enum):
+    # VIRTUAL SINGER
+    Miku = 'miku'
+    Rin = 'rin'
+    Len = 'len'
+    Luka = 'luka'
+    Meiko = 'meiko'
+    Kaito = 'kaito'
+
+    # Leo/need
+    Ichika = 'ichika'
+    Saki = 'saki'
+    Honami = 'honami'
+    Shiho = 'shiho'
+
+    # MORE MORE JUMP!
+    Minori = 'minori'
+    Haruka = 'haruka'
+    Airi = 'airi'
+    Shizuku = 'shizuku'
+
+    # Vivid BAD SQUAD
+    Kohane = 'kohane'
+    An = 'an'
+    Akito = 'akito'
+    Toya = 'toya'
+
+    # Wonderlands×Showtime
+    Tsukasa = 'tsukasa'
+    Emu = 'emu'
+    Nene = 'nene'
+    Rui = 'rui'
+
+    # 25時、ナイトコードで。
+    Kanade = 'kanade'
+    Mafuyu = 'mafuyu'
+    Ena = 'ena'
+    Mizuki = 'mizuki'
+
+    @property
+    def last_name_jp(self) -> str:
+        match self:
+            # VIRTUAL SINGER
+            case GameCharacter.Miku: return '初音'
+            case GameCharacter.Rin: return '鏡音'
+            case GameCharacter.Len: return '鏡音'
+            case GameCharacter.Luka: return '巡音'
+            case GameCharacter.Meiko: return 'MEIKO'
+            case GameCharacter.Kaito: return 'KAITO'
+            # Leo/need
+            case GameCharacter.Ichika: return '星乃'
+            case GameCharacter.Saki: return '天馬'
+            case GameCharacter.Honami: return '望月'
+            case GameCharacter.Shiho: return '日野森'
+            # MORE MORE JUMP!
+            case GameCharacter.Minori: return '花里'
+            case GameCharacter.Haruka: return '桐谷'
+            case GameCharacter.Airi: return '桃井'
+            case GameCharacter.Shizuku: return '日野森'
+            # Vivid BAD SQUAD
+            case GameCharacter.Kohane: return '小豆沢'
+            case GameCharacter.An: return '白石'
+            case GameCharacter.Akito: return '東雲'
+            case GameCharacter.Toya: return '青柳'
+            # ワンダーランズ×ショウタイム
+            case GameCharacter.Tsukasa: return '天馬'
+            case GameCharacter.Emu: return '鳳'
+            case GameCharacter.Nene: return '草薙'
+            case GameCharacter.Rui: return '神代'
+            # 25時、ナイトコードで。
+            case GameCharacter.Kanade: return '宵崎'
+            case GameCharacter.Mafuyu: return '朝比奈'
+            case GameCharacter.Ena: return '東雲'
+            case GameCharacter.Mizuki: return '暁山'
+            case _:
+                assert_never(self)
+
+    @property
+    def last_name_cn(self) -> str:
+        match self:
+            case GameCharacter.Miku: return '初音'
+            case GameCharacter.Rin: return '镜音'
+            case GameCharacter.Len: return '镜音'
+            case GameCharacter.Luka: return '巡音'
+            case GameCharacter.Meiko: return ''
+            case GameCharacter.Kaito: return ''
+            case GameCharacter.Ichika: return '星乃'
+            case GameCharacter.Saki: return '天马'
+            case GameCharacter.Honami: return '望月'
+            case GameCharacter.Shiho: return '日野森'
+            case GameCharacter.Minori: return '花里'
+            case GameCharacter.Haruka: return '桐谷'
+            case GameCharacter.Airi: return '桃井'
+            case GameCharacter.Shizuku: return '日野森'
+            case GameCharacter.Kohane: return '小豆泽'
+            case GameCharacter.An: return '白石'
+            case GameCharacter.Akito: return '东云'
+            case GameCharacter.Toya: return '青柳'
+            case GameCharacter.Tsukasa: return '天马'
+            case GameCharacter.Emu: return '凤'
+            case GameCharacter.Nene: return '草薙'
+            case GameCharacter.Rui: return '神代'
+            case GameCharacter.Kanade: return '宵崎'
+            case GameCharacter.Mafuyu: return '朝比奈'
+            case GameCharacter.Ena: return '东云'
+            case GameCharacter.Mizuki: return '晓山'
+            case _:
+                assert_never(self)
+
+    @property
+    def last_name_en(self) -> str:
+        match self:
+            case GameCharacter.Miku: return 'Hatsune'
+            case GameCharacter.Rin: return 'Kagamine'
+            case GameCharacter.Len: return 'Kagamine'
+            case GameCharacter.Luka: return 'Megurine'
+            case GameCharacter.Meiko: return ''
+            case GameCharacter.Kaito: return ''
+            case GameCharacter.Ichika: return 'Hoshino'
+            case GameCharacter.Saki: return 'Tenma'
+            case GameCharacter.Honami: return 'Mochizuki'
+            case GameCharacter.Shiho: return 'Hinomori'
+            case GameCharacter.Minori: return 'Hanasato'
+            case GameCharacter.Haruka: return 'Kiritani'
+            case GameCharacter.Airi: return 'Momoi'
+            case GameCharacter.Shizuku: return 'Hinomori'
+            case GameCharacter.Kohane: return 'Azusawa'
+            case GameCharacter.An: return 'Shiraishi'
+            case GameCharacter.Akito: return 'Shinonome'
+            case GameCharacter.Toya: return 'Aoyagi'
+            case GameCharacter.Tsukasa: return 'Tenma'
+            case GameCharacter.Emu: return 'Otori'
+            case GameCharacter.Nene: return 'Kusanagi'
+            case GameCharacter.Rui: return 'Kamishiro'
+            case GameCharacter.Kanade: return 'Yoisaki'
+            case GameCharacter.Mafuyu: return 'Asahina'
+            case GameCharacter.Ena: return 'Shinonome'
+            case GameCharacter.Mizuki: return 'Akiyama'
+            case _:
+                assert_never(self)
+
+    @property
+    def first_name_jp(self) -> str:
+        match self:
+            case GameCharacter.Miku: return 'ミク'
+            case GameCharacter.Rin: return 'リン'
+            case GameCharacter.Len: return 'レン'
+            case GameCharacter.Luka: return 'ルカ'
+            case GameCharacter.Meiko: return ''
+            case GameCharacter.Kaito: return ''
+            case GameCharacter.Ichika: return '一歌'
+            case GameCharacter.Saki: return '咲希'
+            case GameCharacter.Honami: return '穂波'
+            case GameCharacter.Shiho: return '志歩'
+            case GameCharacter.Minori: return 'みのり'
+            case GameCharacter.Haruka: return '遥'
+            case GameCharacter.Airi: return '愛莉'
+            case GameCharacter.Shizuku: return '雫'
+            case GameCharacter.Kohane: return 'こはね'
+            case GameCharacter.An: return '杏'
+            case GameCharacter.Akito: return '彰人'
+            case GameCharacter.Toya: return '冬弥'
+            case GameCharacter.Tsukasa: return '司'
+            case GameCharacter.Emu: return 'えむ'
+            case GameCharacter.Nene: return '寧々'
+            case GameCharacter.Rui: return '類'
+            case GameCharacter.Kanade: return '奏'
+            case GameCharacter.Mafuyu: return 'まふゆ'
+            case GameCharacter.Ena: return '絵名'
+            case GameCharacter.Mizuki: return '瑞希'
+            case _:
+                assert_never(self)
+
+    @property
+    def first_name_cn(self) -> str:
+        match self:
+            case GameCharacter.Miku: return '未来'
+            case GameCharacter.Rin: return '铃'
+            case GameCharacter.Len: return '连'
+            case GameCharacter.Luka: return '流歌'
+            case GameCharacter.Meiko: return 'MEIKO'
+            case GameCharacter.Kaito: return 'KAITO'
+            case GameCharacter.Ichika: return '一歌'
+            case GameCharacter.Saki: return '咲希'
+            case GameCharacter.Honami: return '穗波'
+            case GameCharacter.Shiho: return '志步'
+            case GameCharacter.Minori: return '实乃里'
+            case GameCharacter.Haruka: return '遥'
+            case GameCharacter.Airi: return '爱莉'
+            case GameCharacter.Shizuku: return '雫'
+            case GameCharacter.Kohane: return '心羽音'
+            case GameCharacter.An: return '杏'
+            case GameCharacter.Akito: return '彰人'
+            case GameCharacter.Toya: return '冬弥'
+            case GameCharacter.Tsukasa: return '司'
+            case GameCharacter.Emu: return '笑梦'
+            case GameCharacter.Nene: return '宁宁'
+            case GameCharacter.Rui: return '类'
+            case GameCharacter.Kanade: return '奏'
+            case GameCharacter.Mafuyu: return '真冬'
+            case GameCharacter.Ena: return '绘名'
+            case GameCharacter.Mizuki: return '瑞希'
+            case _:
+                assert_never(self)
+
+    @property
+    def first_name_en(self) -> str:
+        match self:
+            case GameCharacter.Miku: return 'Miku'
+            case GameCharacter.Rin: return 'Rin'
+            case GameCharacter.Len: return 'Len'
+            case GameCharacter.Luka: return 'Luka'
+            case GameCharacter.Meiko: return 'MEIKO'
+            case GameCharacter.Kaito: return 'KAITO'
+            case GameCharacter.Ichika: return 'Ichika'
+            case GameCharacter.Saki: return 'Saki'
+            case GameCharacter.Honami: return 'Honami'
+            case GameCharacter.Shiho: return 'Shiho'
+            case GameCharacter.Minori: return 'Minori'
+            case GameCharacter.Haruka: return 'Haruka'
+            case GameCharacter.Airi: return 'Airi'
+            case GameCharacter.Shizuku: return 'Shizuku'
+            case GameCharacter.Kohane: return 'Kohane'
+            case GameCharacter.An: return 'An'
+            case GameCharacter.Akito: return 'Akito'
+            case GameCharacter.Toya: return 'Toya'
+            case GameCharacter.Tsukasa: return 'Tsukasa'
+            case GameCharacter.Emu: return 'Emu'
+            case GameCharacter.Nene: return 'Nene'
+            case GameCharacter.Rui: return 'Rui'
+            case GameCharacter.Kanade: return 'Kanade'
+            case GameCharacter.Mafuyu: return 'Mafuyu'
+            case GameCharacter.Ena: return 'Ena'
+            case GameCharacter.Mizuki: return 'Mizuki'
+            case _:
+                assert_never(self)
+
 
 class GameConfig(BaseModel):
     server: Literal['jp'] = 'jp'
     link_account: LinkAccountOptions = 'no'
     emulator: EmulatorOptions = 'mumu'
+    control_impl: Literal['nemu_ipc', 'adb', 'uiautomator'] = 'nemu_ipc'
     """
     是否引继账号。
     
@@ -33,6 +275,10 @@ class LiveConfig(BaseModel):
     指定次数。
     """
     fully_deplete: bool = False
+
+
+class ChallengeLiveConfig(BaseModel):
+    characters: list[GameCharacter] = []
 
 
 class SchedulerConfig(BaseModel):

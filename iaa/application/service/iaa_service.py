@@ -25,7 +25,9 @@ class IaaService:
         if root_logger.handlers:
             return
             
-        root_logger.setLevel(logging.DEBUG)
+        root_logger.setLevel(logging.INFO)
+        logging.getLogger("kotonebot").setLevel(logging.DEBUG)
+        logging.getLogger("iaa").setLevel(logging.DEBUG)
 
         # 控制台输出
         console_handler = logging.StreamHandler()
@@ -61,6 +63,16 @@ class IaaService:
             # 源码运行
             return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-    @property
+    @cached_property
     def version(self) -> str:
-        return 'Not implemented yet.'
+        """
+        软件版本号。
+        若获取失败，返回 'Unknown'。
+        """
+        try:
+            from iaa import __VERSION__  # type: ignore
+            if isinstance(__VERSION__, str) and __VERSION__:
+                return __VERSION__
+        except Exception:
+            pass
+        return 'Unknown'

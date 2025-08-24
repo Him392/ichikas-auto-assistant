@@ -4,12 +4,14 @@ from typing_extensions import assert_never
 from kotonebot import logging
 from kotonebot import device, image, task, Loop, action, sleep, color
 
-from iaa.tasks.live._select_song import next_song
 
 from .. import R
-from ..start_game import go_home
 from ..common import at_home
-from iaa.consts import PACKAGE_NAME_JP
+from iaa.context import conf
+from ..start_game import go_home
+from ._select_song import next_song
+from ._scene import at_song_select
+from iaa.config.schemas import GameCharacter
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ def start_auto_live(
 ):
     """
     前置：位于编队界面\n
-    结束：首页
+    结束：首页或选歌界面
 
     :param auto_setting: 自动演出设置。\n
         * `"all"`: 自动演出直到 AP 不足
@@ -80,13 +82,15 @@ def start_auto_live(
                 break
         else:
             # 单次演出
-            # 结束条件是「LIVE CLEAR」提示
-            if image.find(R.Live.TextLiveClear):
-                logger.debug('Waiting for LIVE CLEAR')
-                break
+            # 结束条件是「SCORERANK」提示
+            if image.find(R.Live.TextScoreRank):
+                logger.debug('Waiting for SCORERANK')
+                sleep(1) # 等待 SCORERANK 动画完成
+                device.click_center()
+                break 
 
     # 返回位置
-    for _ in Loop():
+    for _ in Loop(interval=0.5):
         # 返回主页只要一直点就可以了
         if back_to == 'home':
             if at_home():
@@ -95,12 +99,17 @@ def start_auto_live(
             sleep(0.6)
         # 返回选歌界面要点“返回歌曲选择”按钮
         elif back_to == 'select':
-            if image.find(R.Live.ButtonGoSongSelect):
+            if image.find(R.Live.ButtonLiveCompletedNext):
+                device.click()
+                logger.debug('Clicked live completed ok button.')
+            elif image.find(R.Live.ButtonGoSongSelect):
                 device.click()
                 logger.debug('Clicked select song button.')
+            elif at_song_select():
+                logger.debug('Now at song select.')
                 break
-            device.click(1, 1)
-            sleep(0.6)
+            else:
+                logger.debug('Waiting for reward screen finished.')
 
 @action('选歌', screenshot_mode='manual')
 def enter_unit_select():
@@ -109,15 +118,16 @@ def enter_unit_select():
     结束：位于编队界面
     """
     for _ in Loop(interval=0.6):
-        if image.find(R.Live.ButtonDecide):
-            device.click()
+        if btn_start := at_song_select():
+            device.click(btn_start)
             logger.debug('Clicked start live button.')
             break
     logger.info('Song select finished.')
 
 @action('单人演出', screenshot_mode='manual')
 def solo_live(
-    songs: list[str] | Literal['single-loop'] | Literal['list-loop'] | None = None
+    songs: list[str] | Literal['single-loop'] | Literal['list-loop'] | None = None,
+    loop_count: int | None = None,
 ):
     """
     
@@ -126,7 +136,12 @@ def solo_live(
     * `"single-loop"`: 单曲循环演出
     * `"list-loop"`: 列表循环演出
     * `list[str]`: 指定要演出的歌曲列表
+    :param loop_count: 列表循环演出次数。\n
+        * `None`: 不限制次数
+        * 任意整数: 演出指定次数
     """
+    if loop_count is not None and loop_count <= 0:
+        raise ValueError('loop_count must be positive.')
     # 进入单人演出
     for _ in Loop(interval=0.6):
         if image.find(R.Hud.ButtonLive, threshold=0.55):
@@ -136,31 +151,37 @@ def solo_live(
         elif image.find(R.Live.ButtonSoloLive):
             device.click()
             logger.debug('Clicked SoloLive button.')
-        elif image.find(R.Live.ButtonDecide):
+        elif at_song_select():
             logger.debug('Now at song select.')
             break
     
+    count = 0
+    max_count = loop_count or float('inf')
     match songs:
         case None:
             enter_unit_select()
+            start_auto_live('once', back_to='home')
         case 'single-loop':
-            pass
+            enter_unit_select()
+            start_auto_live('all', back_to='home')
         # 列表循环
         case 'list-loop':
             for _ in Loop():
                 next_song()
                 enter_unit_select()
                 start_auto_live('once', back_to='select')
-                logger.info('Song looped.')
+                logger.info(f'Song looped. {count}/{max_count}')
+                count += 1
+                if count >= max_count:
+                    break
         case songs if isinstance(songs, list):
             raise NotImplementedError('Not implemented yet.')
         case _:
             assert_never(songs)
-    start_auto_live('all')
 
 @action('挑战演出', screenshot_mode='manual')
 def challenge_live(
-    character
+    character: GameCharacter
 ):
     # 进入挑战演出
     for _ in Loop(interval=0.6):
@@ -185,18 +206,79 @@ def challenge_live(
             logger.debug('Clicked group virtual singer.')
 
     # 选择角色
-    # HACK: 硬编码
-    logger.info(f'Selecting character: {character}')
-    if character != 'ichika':
-        raise NotImplementedError('Not implemented yet.')
+    logger.info(f'Selecting character: {character.value}')
+    def to_res(ch: GameCharacter):
+        """返回 (角色贴图, 分组贴图或 None)。"""
+        match ch:
+            case GameCharacter.Miku:
+                return (R.Live.ChallengeLive.CharaMiku, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Rin:
+                return (R.Live.ChallengeLive.CharaRin, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Len:
+                return (R.Live.ChallengeLive.CharaLen, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Luka:
+                return (R.Live.ChallengeLive.CharaLuka, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Meiko:
+                return (R.Live.ChallengeLive.CharaMeiko, R.Live.ChallengeLive.GroupVirtualSinger)
+            case GameCharacter.Kaito:
+                return (R.Live.ChallengeLive.CharaKaito, R.Live.ChallengeLive.GroupVirtualSinger)
+
+            case GameCharacter.Ichika:
+                return (R.Live.ChallengeLive.CharaIchika, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Saki:
+                return (R.Live.ChallengeLive.CharaSaki, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Honami:
+                return (R.Live.ChallengeLive.CharaHonami, R.Live.ChallengeLive.GroupLeoneed)
+            case GameCharacter.Shiho:
+                return (R.Live.ChallengeLive.CharaShiho, R.Live.ChallengeLive.GroupLeoneed)
+
+            case GameCharacter.Minori:
+                return (R.Live.ChallengeLive.CharaMinori, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Haruka:
+                return (R.Live.ChallengeLive.CharaHaruka, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Airi:
+                return (R.Live.ChallengeLive.CharaAiri, R.Live.ChallengeLive.GroupMoreMoreJump)
+            case GameCharacter.Shizuku:
+                return (R.Live.ChallengeLive.CharaShizuku, R.Live.ChallengeLive.GroupMoreMoreJump)
+
+            case GameCharacter.Kohane:
+                return (R.Live.ChallengeLive.CharaKohane, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.An:
+                return (R.Live.ChallengeLive.CharaAn, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.Akito:
+                return (R.Live.ChallengeLive.CharaAkito, R.Live.ChallengeLive.GroupVividBadSquad)
+            case GameCharacter.Toya:
+                return (R.Live.ChallengeLive.CharaToya, R.Live.ChallengeLive.GroupVividBadSquad)
+
+            case GameCharacter.Tsukasa:
+                return (R.Live.ChallengeLive.CharaTsukasa, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Emu:
+                return (R.Live.ChallengeLive.CharaEmu, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Nene:
+                return (R.Live.ChallengeLive.CharaNene, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+            case GameCharacter.Rui:
+                return (R.Live.ChallengeLive.CharaRui, R.Live.ChallengeLive.GroupWonderlandsShowtime)
+
+            case GameCharacter.Kanade:
+                return (R.Live.ChallengeLive.CharaKanade, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Mafuyu:
+                return (R.Live.ChallengeLive.CharaMafuyu, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Ena:
+                return (R.Live.ChallengeLive.CharaEna, R.Live.ChallengeLive.Group25AtNightcord)
+            case GameCharacter.Mizuki:
+                return (R.Live.ChallengeLive.CharaMizuki, R.Live.ChallengeLive.Group25AtNightcord)
+            case _ as impossible:
+                assert_never(impossible)
+    
+    char_img, group_img = to_res(character)
     for _ in Loop(interval=0.6):
-        if image.find(R.Live.ChallengeLive.GroupLeoneed):
+        if group_img and image.find(group_img):
             device.click()
-            logger.debug(f'Clicked group Leo/need HARDCODED.')
-        elif image.find(R.Live.ChallengeLive.CharaIchika):
+            logger.debug('Clicked group for character.')
+        elif image.find(char_img):
             device.click()
-            logger.debug(f'Clicked character {character}.')
-        elif image.find(R.Live.ButtonDecide):
+            logger.debug('Clicked character.')
+        elif at_song_select():
             logger.debug('Now at song select.')
             break
     enter_unit_select()
@@ -205,15 +287,15 @@ def challenge_live(
 @task('单人演出')
 def task_solo_live():
     go_home()
-    solo_live()
+    solo_live('single-loop')
 
 @task('挑战演出')
 def task_challenge_live():
     go_home()
-    challenge_live('ichika')
+    challenge_live(conf().challenge_live.characters[0])
 
 @task('演出')
 def live():
     go_home()
     solo_live()
-    challenge_live('ichika')
+    challenge_live(GameCharacter.Ichika)

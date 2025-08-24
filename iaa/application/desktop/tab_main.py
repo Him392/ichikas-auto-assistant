@@ -1,6 +1,7 @@
 import tkinter as tk
 
 import ttkbootstrap as tb
+from tkinter import messagebox
 
 from .index import DesktopApp
 
@@ -89,6 +90,22 @@ def build_control_tab(app: DesktopApp, parent: tk.Misc) -> None:
   cb_single.grid(row=0, column=1, sticky=tk.W, padx=40, pady=(16, 8))
   cb_challenge.grid(row=0, column=2, sticky=tk.W, padx=40, pady=(16, 8))
   cb_cm.grid(row=0, column=3, sticky=tk.W, padx=40, pady=(16, 8))
+
+  def _on_ten_songs() -> None:
+    sch = app.service.scheduler
+    if sch.is_starting or sch.is_stopping:
+      return
+    confirm = messagebox.askyesno(
+      "确认开始",
+      "即将开始列表循环 AUTO 歌单（最多 10 次）。AUTO 次数用完或体力不足时将会停止，也可以中途手动停止。是否继续？",
+      parent=app.root,
+    )
+    if not confirm:
+      return
+    sch.run_manual("ten_songs", run_in_thread=True)
+
+  btn_ten_songs = tb.Button(lf_tasks, text="刷完成歌曲首数", command=_on_ten_songs)
+  btn_ten_songs.grid(row=1, column=0, sticky=tk.W, padx=20, pady=(8, 16))
 
   # 让容器在放大时保留边距
   lf_tasks.grid_columnconfigure(4, weight=1) 

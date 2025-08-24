@@ -26,7 +26,7 @@ def build_about_tab(app: DesktopApp, parent: tk.Misc) -> None:
 
   # 标题与版本
   title = tb.Label(inner, text="一歌小助手 iaa", font=("Microsoft YaHei UI", 20, "bold"))
-  subtitle = tb.Label(inner, text=f"版本 {app.service.version}", font=("Microsoft YaHei UI", 10))
+  subtitle = tb.Label(inner, text=f"版本 v{app.service.version}", font=("Microsoft YaHei UI", 10))
   title.pack(pady=(0, 6))
   subtitle.pack(pady=(0, 12))
 
