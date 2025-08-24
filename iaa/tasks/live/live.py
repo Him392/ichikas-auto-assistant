@@ -160,8 +160,10 @@ def solo_live(
     match songs:
         case None:
             enter_unit_select()
+            start_auto_live('once', back_to='home')
         case 'single-loop':
-            pass
+            enter_unit_select()
+            start_auto_live('all', back_to='home')
         # 列表循环
         case 'list-loop':
             for _ in Loop():
@@ -285,7 +287,7 @@ def challenge_live(
 @task('单人演出')
 def task_solo_live():
     go_home()
-    solo_live()
+    solo_live('single-loop')
 
 @task('挑战演出')
 def task_challenge_live():
