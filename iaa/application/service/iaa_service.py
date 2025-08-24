@@ -25,7 +25,9 @@ class IaaService:
         if root_logger.handlers:
             return
             
-        root_logger.setLevel(logging.DEBUG)
+        root_logger.setLevel(logging.INFO)
+        logging.getLogger("kotonebot").setLevel(logging.DEBUG)
+        logging.getLogger("iaa").setLevel(logging.DEBUG)
 
         # 控制台输出
         console_handler = logging.StreamHandler()

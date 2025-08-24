@@ -1,31 +1,11 @@
 import argparse
-from typing import Callable
 
-from kotonebot import logging
-from kotonebot.backend.context.context import init_context, manual_context
-from kotonebot.client.host import Mumu12Host
-from kotonebot.client.host.mumu12_host import MuMu12HostConfig
-from kotonebot.client.implements.windows import WindowsImpl, WindowsImplConfig
 from kotonebot.backend import debug
 
-from iaa.tasks.registry import MANUAL_TASKS, REGULAR_TASKS
+from iaa.application.service.iaa_service import IaaService
+from iaa.tasks.registry import MANUAL_TASKS
+import iaa.application.service.config_service as config_service_module
 
-from .tasks.cm import cm
-from .tasks.live import live
-from .tasks.start_game import start_game
-from .context import init
-from .config.manager import read
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='[%(asctime)s][%(levelname)s][%(name)s.%(funcName)s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
-
-TASKS: dict[str, Callable[[], None]] = {}
-TASKS.update(MANUAL_TASKS)
-TASKS.update(REGULAR_TASKS)
 
 def main():
     parser = argparse.ArgumentParser(description='Run specific tasks')
@@ -33,30 +13,28 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
     parser.add_argument('--config', '-c', type=str, default='default', help='Configuration name to use')
     args = parser.parse_args()
-    
+
     if args.debug:
         debug.debug.enabled = True
         debug.debug.auto_save_to_folder = 'dumps'
-    
-    # 初始化配置
-    config = read(args.config, not_exist='create')
-    init(config)
-    
-    ins = Mumu12Host.list()[0]
-    d = ins.create_device('nemu_ipc', MuMu12HostConfig())
-    d.target_resolution = (1280, 720)
-    d.orientation = 'landscape'
-    init_context(target_device=d)
-    
+
+    # 覆盖配置名称后再构造服务，确保 ConfigService 读取目标配置
+    config_service_module.DEFAULT_CONFIG_NAME = args.config
+
+    # 初始化核心服务（日志、配置、资源、调度器）
+    iaa = IaaService()
+
     if args.task:
-        if args.task in TASKS:
-            TASKS[args.task]()
-        else:
-            print(f"Available tasks: {list(TASKS.keys())}")
+        try:
+            # 同步执行单个手动任务
+            iaa.scheduler.run_manual(args.task, run_in_thread=False)
+        except ValueError:
+            print(f"Available tasks: {list(MANUAL_TASKS.keys())}")
             print(f"Task '{args.task}' not found")
     else:
-        for func in TASKS.values():
-            func()
+        # 同步执行按配置启用的常规任务
+        iaa.scheduler.start_regular(run_in_thread=False)
+
 
 if __name__ == "__main__":
     main()
