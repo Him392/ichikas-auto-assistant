@@ -168,6 +168,9 @@ class SchedulerService:
         elif impl == 'adb':
             from kotonebot.client.host import AdbHostConfig
             device = host.create_device('adb', AdbHostConfig())
+        elif impl == 'uiautomator':
+            from kotonebot.client.host import AdbHostConfig
+            device = host.create_device('uiautomator2', AdbHostConfig())
         else:
             raise ValueError(f"Unknown control implementation: {impl}")
         device.target_resolution = (1280, 720)

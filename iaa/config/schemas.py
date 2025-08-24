@@ -249,7 +249,7 @@ class GameConfig(BaseModel):
     server: Literal['jp'] = 'jp'
     link_account: LinkAccountOptions = 'no'
     emulator: EmulatorOptions = 'mumu'
-    control_impl: Literal['nemu_ipc', 'adb'] = 'nemu_ipc'
+    control_impl: Literal['nemu_ipc', 'adb', 'uiautomator'] = 'nemu_ipc'
     """
     是否引继账号。
     
