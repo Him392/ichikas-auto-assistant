@@ -4,7 +4,7 @@ import ttkbootstrap as tb
 
 from .index import DesktopApp
 from typing import cast, Literal, Optional
-from iaa.config.schemas import LinkAccountOptions, EmulatorOptions, GameCharacter
+from iaa.config.schemas import LinkAccountOptions, EmulatorOptions, GameCharacter, ChallengeLiveAward
 from .toast import show_toast
 from .advance_select import AdvanceSelect
 from iaa.config.base import IaaConfig
@@ -46,10 +46,13 @@ class ConfStore:
     self.fully_deplete_var = tk.BooleanVar()
     # 挑战演出设置
     self.challenge_char_vars: dict[GameCharacter, tk.BooleanVar] = {}
+    self.challenge_award_var = tk.StringVar()
     # 分组多选组件实例
     self.challenge_select: Optional[AdvanceSelect[GameCharacter]] = None
     # 映射表（仅用于歌曲选择）
     self.song_display_to_value: dict[str, int] = {}
+    # 奖励显示到值映射
+    self.challenge_award_display_to_value: dict[str, ChallengeLiveAward] = {}
 
 
 def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) -> None:
@@ -144,11 +147,22 @@ def build_challenge_live_config_group(parent: tk.Misc, conf: IaaConfig, store: C
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="角色", width=16, anchor=tk.W).pack(side=tk.LEFT)
   grouped_options: list[tuple[str, list[tuple[GameCharacter, str]]]] = [
-    (name, [(ch, ch.last_name_cn +ch.first_name_cn) for ch in chars]) for name, chars in groups
+    (name, [(ch, ch.last_name_cn + ch.first_name_cn) for ch in chars]) for name, chars in groups
   ]
   select = AdvanceSelect[GameCharacter](row, groups=grouped_options, selected=selected, mutiple=False, placeholder="请选择角色")
   select.pack(side=tk.LEFT, fill=tk.X, expand=True)
   store.challenge_select = select
+
+  # 奖励优先设置
+  award_display_map = ChallengeLiveAward.display_map_cn()
+  store.challenge_award_display_to_value = {v: k for k, v in award_display_map.items()}
+  current_award_display = award_display_map.get(getattr(conf.challenge_live, 'award', ChallengeLiveAward.Crystal), "水晶")
+
+  row = tb.Frame(frame)
+  row.pack(fill=tk.X, padx=8, pady=8)
+  tb.Label(row, text="奖励", width=16, anchor=tk.W).pack(side=tk.LEFT)
+  store.challenge_award_var.set(current_award_display)
+  tb.Combobox(row, state="readonly", textvariable=store.challenge_award_var, values=list(store.challenge_award_display_to_value.keys()), width=28).pack(side=tk.LEFT)
 
 
 def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG001
@@ -248,6 +262,8 @@ def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG00
       # 挑战演出设置
       selected_chars: list[GameCharacter] = store.challenge_select.get() if store.challenge_select else []
       conf.challenge_live.characters = selected_chars
+      award_display = store.challenge_award_var.get()
+      conf.challenge_live.award = store.challenge_award_display_to_value.get(award_display, ChallengeLiveAward.Crystal)
 
       app.service.config.save()
       show_toast(app.root, "保存成功", kind="success")
