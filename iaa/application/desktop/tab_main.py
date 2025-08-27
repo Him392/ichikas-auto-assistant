@@ -102,7 +102,7 @@ def build_control_tab(app: DesktopApp, parent: tk.Misc) -> None:
     )
     if not confirm:
       return
-    sch.run_manual("ten_songs", run_in_thread=True)
+    sch.run_single("ten_songs", run_in_thread=True)
 
   btn_ten_songs = tb.Button(lf_tasks, text="刷完成歌曲首数", command=_on_ten_songs)
   btn_ten_songs.grid(row=1, column=0, sticky=tk.W, padx=20, pady=(8, 16))

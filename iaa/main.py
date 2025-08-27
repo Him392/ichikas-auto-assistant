@@ -3,7 +3,7 @@ import argparse
 from kotonebot.backend import debug
 
 from iaa.application.service.iaa_service import IaaService
-from iaa.tasks.registry import MANUAL_TASKS
+from iaa.tasks.registry import MANUAL_TASKS, REGULAR_TASKS
 import iaa.application.service.config_service as config_service_module
 
 
@@ -27,7 +27,7 @@ def main():
     if args.task:
         try:
             # 同步执行单个手动任务
-            iaa.scheduler.run_manual(args.task, run_in_thread=False)
+            iaa.scheduler.run_single(args.task, run_in_thread=False)
         except ValueError:
             print(f"Available tasks: {list(MANUAL_TASKS.keys())}")
             print(f"Task '{args.task}' not found")
