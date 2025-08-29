@@ -32,8 +32,12 @@ def go_intersection():
             device.click()
             logger.debug('Clicked open map button.')
             sleep(0.5)
-        elif image.find(R.Map.ButtonCloseMap):
-            logger.debug('Now at map.')
+        elif image.find(R.Map.ButtonGoToReality):
+            logger.info('Now at Sekai map. Changing to real world.')
+            device.click()
+            sleep(0.5)
+        elif image.find(R.Map.ButtonGoToSekai):
+            logger.debug('Now at real world map.')
             break
     # 重置试图到右下角
     COUNT = 3
