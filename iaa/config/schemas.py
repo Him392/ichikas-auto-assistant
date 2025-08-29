@@ -312,6 +312,7 @@ class SchedulerConfig(BaseModel):
     start_game_enabled: bool = True
     solo_live_enabled: bool = True
     challenge_live_enabled: bool = True
+    activity_story_enabled: bool = True
     cm_enabled: bool = True
 
     def is_enabled(self, task_id: str) -> bool:
@@ -331,4 +332,6 @@ class SchedulerConfig(BaseModel):
             return bool(self.solo_live_enabled)
         if task_id == 'challenge_live':
             return bool(self.challenge_live_enabled)
+        if task_id == 'activity_story':
+            return bool(self.activity_story_enabled)
         return False

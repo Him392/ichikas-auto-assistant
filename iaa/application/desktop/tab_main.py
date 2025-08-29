@@ -68,28 +68,33 @@ def build_control_tab(app: DesktopApp, parent: tk.Misc) -> None:
   var_start_game = tk.BooleanVar(value=bool(conf.scheduler.start_game_enabled))
   var_single_live = tk.BooleanVar(value=bool(conf.scheduler.solo_live_enabled))
   var_challenge_live = tk.BooleanVar(value=bool(conf.scheduler.challenge_live_enabled))
+  var_activity_story = tk.BooleanVar(value=bool(getattr(conf.scheduler, 'activity_story_enabled', True)))
   var_auto_cm = tk.BooleanVar(value=bool(conf.scheduler.cm_enabled))
   app.store.var_start_game = var_start_game
   app.store.var_single_live = var_single_live
   app.store.var_challenge_live = var_challenge_live
+  app.store.var_activity_story = var_activity_story
   app.store.var_auto_cm = var_auto_cm
 
   def _save_scheduler() -> None:
     conf.scheduler.start_game_enabled = bool(var_start_game.get())
     conf.scheduler.solo_live_enabled = bool(var_single_live.get())
     conf.scheduler.challenge_live_enabled = bool(var_challenge_live.get())
+    conf.scheduler.activity_story_enabled = bool(var_activity_story.get())
     conf.scheduler.cm_enabled = bool(var_auto_cm.get())
     app.service.config.save()
 
   cb_start_game = tb.Checkbutton(lf_tasks, text="启动游戏", variable=var_start_game, command=_save_scheduler)
   cb_single = tb.Checkbutton(lf_tasks, text="单人演出", variable=var_single_live, command=_save_scheduler)
   cb_challenge = tb.Checkbutton(lf_tasks, text="挑战演出", variable=var_challenge_live, command=_save_scheduler)
+  cb_activity_story = tb.Checkbutton(lf_tasks, text="活动剧情", variable=var_activity_story, command=_save_scheduler)
   cb_cm = tb.Checkbutton(lf_tasks, text="自动 CM", variable=var_auto_cm, command=_save_scheduler)
 
   cb_start_game.grid(row=0, column=0, sticky=tk.W, padx=20, pady=(16, 8))
   cb_single.grid(row=0, column=1, sticky=tk.W, padx=40, pady=(16, 8))
   cb_challenge.grid(row=0, column=2, sticky=tk.W, padx=40, pady=(16, 8))
-  cb_cm.grid(row=0, column=3, sticky=tk.W, padx=40, pady=(16, 8))
+  cb_activity_story.grid(row=0, column=3, sticky=tk.W, padx=40, pady=(16, 8))
+  cb_cm.grid(row=0, column=4, sticky=tk.W, padx=40, pady=(16, 8))
 
   def _on_ten_songs() -> None:
     sch = app.service.scheduler
@@ -108,4 +113,4 @@ def build_control_tab(app: DesktopApp, parent: tk.Misc) -> None:
   btn_ten_songs.grid(row=1, column=0, sticky=tk.W, padx=20, pady=(8, 16))
 
   # 让容器在放大时保留边距
-  lf_tasks.grid_columnconfigure(4, weight=1) 
+  lf_tasks.grid_columnconfigure(5, weight=1) 
