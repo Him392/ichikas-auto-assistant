@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Callable, Literal
 from typing_extensions import assert_never
 
 from kotonebot import logging
@@ -11,18 +11,19 @@ from iaa.context import conf
 from ..start_game import go_home
 from ._select_song import next_song
 from ._scene import at_song_select
-from iaa.config.schemas import GameCharacter
+from iaa.config.schemas import ChallengeLiveAward, GameCharacter
 
 logger = logging.getLogger(__name__)
 
 @action('演出', screenshot_mode='manual')
 def start_auto_live(
     auto_setting: Literal['all'] | Literal['once'] | int | None = 'all',
-    back_to: Literal['home'] | Literal['select'] = 'home',
+    back_to: Literal['home'] | Literal['select'] | None = 'home',
+    finish_extra_check: Callable[[], bool] | None = None,
 ):
     """
     前置：位于编队界面\n
-    结束：首页或选歌界面
+    结束：首页、选歌界面或 LIVE CLEAR 画面
 
     :param auto_setting: 自动演出设置。\n
         * `"all"`: 自动演出直到 AP 不足
@@ -32,6 +33,8 @@ def start_auto_live(
     :param back_to: 返回位置。\n
         * `"home"`: 返回首页
         * `"select"`: 返回选歌界面
+        * `None`: 不返回，直接在 LIVE CLEAR 或「已完成指定次数的演出」画面结束
+    :param finish_extra_check: 结束演出时的额外处理。返回 True 时结束循环。\n
     :raises NotImplementedError: 如果未实现的功能被调用。\n
     """
     if auto_setting is None or isinstance(auto_setting, int):
@@ -88,8 +91,9 @@ def start_auto_live(
                 sleep(1) # 等待 SCORERANK 动画完成
                 device.click_center()
                 break 
-
-    # 返回位置
+    if back_to is None:
+        return
+    # 返回
     for _ in Loop(interval=0.5):
         # 返回主页只要一直点就可以了
         if back_to == 'home':
@@ -110,6 +114,9 @@ def start_auto_live(
                 break
             else:
                 logger.debug('Waiting for reward screen finished.')
+            
+        if finish_extra_check and finish_extra_check():
+            break
 
 @action('选歌', screenshot_mode='manual')
 def enter_unit_select():
@@ -207,7 +214,7 @@ def challenge_live(
 
     # 选择角色
     logger.info(f'Selecting character: {character.value}')
-    def to_res(ch: GameCharacter):
+    def char_to_res(ch: GameCharacter):
         """返回 (角色贴图, 分组贴图或 None)。"""
         match ch:
             case GameCharacter.Miku:
@@ -270,7 +277,24 @@ def challenge_live(
             case _ as impossible:
                 assert_never(impossible)
     
-    char_img, group_img = to_res(character)
+    def award_to_res(award: ChallengeLiveAward):
+        match award:
+            case ChallengeLiveAward.Crystal:
+                return R.Live.ChallengeLive.Award.Crystal
+            case ChallengeLiveAward.MusicCard:
+                return R.Live.ChallengeLive.Award.MusicCard
+            case ChallengeLiveAward.MiracleGem:
+                return R.Live.ChallengeLive.Award.MiracleGem
+            case ChallengeLiveAward.MagicCloth:
+                return R.Live.ChallengeLive.Award.MagicCloth
+            case ChallengeLiveAward.Coin:
+                return R.Live.ChallengeLive.Award.Coin
+            case ChallengeLiveAward.IntermediatePracticeScore:
+                return R.Live.ChallengeLive.Award.IntermediatePracticeScore
+            case _ as impossible:
+                assert_never(impossible)
+
+    char_img, group_img = char_to_res(character)
     for _ in Loop(interval=0.6):
         if group_img and image.find(group_img):
             device.click()
@@ -282,7 +306,22 @@ def challenge_live(
             logger.debug('Now at song select.')
             break
     enter_unit_select()
-    start_auto_live('once')
+    # 处理奖励
+    def claim_reward():
+        # 选择奖励
+        if image.find(R.Live.ChallengeLive.TextWeeklyAward):
+            if image.find(award_to_res(conf().challenge_live.award)):
+                device.click()
+                logger.debug('Clicked award.')
+                sleep(0.3)
+        # 确认领取提示
+        elif image.find(R.Live.ChallengeLive.TextAwardClaimConfirm):
+            if image.find(R.Live.ChallengeLive.ButtonConfirm):
+                device.click()
+                logger.debug('Clicked confirm award claim.')
+                sleep(0.3)
+        return False
+    start_auto_live('once', finish_extra_check=claim_reward)
 
 @task('单人演出')
 def task_solo_live():

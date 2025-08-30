@@ -11,6 +11,7 @@ class Store:
     var_start_game: tk.BooleanVar | None = None
     var_single_live: tk.BooleanVar | None = None
     var_challenge_live: tk.BooleanVar | None = None
+    var_activity_story: tk.BooleanVar | None = None
     var_auto_cm: tk.BooleanVar | None = None
     logo_image: tk.PhotoImage | None = None # LOGO 组件图片。防止被 GC
 
@@ -86,6 +87,8 @@ class DesktopApp:
             tasks.append("单人演出")
         if self.store.var_challenge_live and self.store.var_challenge_live.get():
             tasks.append("挑战演出")
+        if self.store.var_activity_story and self.store.var_activity_story.get():
+            tasks.append("活动剧情")
         if self.store.var_auto_cm and self.store.var_auto_cm.get():
             tasks.append("自动 CM")
         return tasks

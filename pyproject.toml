@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     # 目前 kotonebot 库依赖处理还有问题，因此只能 windows 也装上
-    "kotonebot[android,windows]>=0.1.0",
+    "kotonebot[android,windows]==0.2.0",
     "numpy<2.0",
     "onnxruntime==1.14.0",
     "psutil",

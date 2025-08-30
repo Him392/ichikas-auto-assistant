@@ -138,12 +138,14 @@ class SchedulerService:
             self._thread.join()
         self._thread = None
 
-    def run_manual(self, task_id: str, run_in_thread: bool = True) -> None:
-        """运行手动任务。"""
-        if task_id not in MANUAL_TASKS:
+    def run_single(self, task_id: str, run_in_thread: bool = True) -> None:
+        """运行单个任务。"""
+        tasks = MANUAL_TASKS.copy()
+        tasks.update(REGULAR_TASKS)
+        if task_id not in tasks:
             raise ValueError(f"Unknown manual task: {task_id}")
         def _get() -> list[tuple[str, Callable[[], None]]]:
-            return [(task_id, MANUAL_TASKS[task_id])]
+            return [(task_id, tasks[task_id])]
         self.__start_tasks(_get, thread_name="IAA-Scheduler-Manual", run_in_thread=run_in_thread)
 
     def __prepare_context(self) -> None:
