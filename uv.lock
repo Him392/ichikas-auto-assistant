@@ -678,7 +678,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kotonebot", extras = ["android", "windows"], specifier = ">=0.1.0" },
+    { name = "kotonebot", extras = ["android", "windows"], specifier = "==0.2.0" },
     { name = "kotonebot", extras = ["dev"], marker = "extra == 'dev'" },
     { name = "numpy", specifier = "<2.0" },
     { name = "onnxruntime", specifier = "==1.14.0" },
@@ -742,7 +742,7 @@ wheels = [
 
 [[package]]
 name = "kotonebot"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "av" },
@@ -757,9 +757,9 @@ dependencies = [
     { name = "thefuzz" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4e/0e/84dbc0f78aa535a4e0826f472ca4beca9d74568d1b0890116aaf8dc49939/kotonebot-0.1.0.tar.gz", hash = "sha256:26a9786e662599fb47d1aaa626705d5a4c5316090d528a3c4a03e5e8c17f61c3", size = 120694, upload-time = "2025-08-02T12:02:31.457Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/a1/4d54996147d24922fcec06ff604247f477afa8f7d90fe699da6fca907f7c/kotonebot-0.2.0.tar.gz", hash = "sha256:92ebfe855e4b9220c1c25d16565816de81a38c940163c6be507902a6de6365c5", size = 114627, upload-time = "2025-08-30T03:27:13.337Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/51/ebf96572a426b9f0f185bb933144faab3efb276441a20840ad181155de6a/kotonebot-0.1.0-py3-none-any.whl", hash = "sha256:1e3232ec74918b03c781297c2aba846dcbd3e171e8ff27f8bfbc18c4f70ab970", size = 141035, upload-time = "2025-08-02T12:02:29.8Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/63/db13ab0cd42a6190f703c13279022e29e0b5090c978ff0211914dce75e87/kotonebot-0.2.0-py3-none-any.whl", hash = "sha256:876b997af5b7b215a9685cd714e51337f9bfa27b0010f1cb15291a011176fe05", size = 137981, upload-time = "2025-08-30T03:27:11.207Z" },
 ]
 
 [package.optional-dependencies]
@@ -779,6 +779,7 @@ dev = [
 ]
 windows = [
     { name = "ahk" },
+    { name = "psutil" },
     { name = "pywin32" },
     { name = "win11toast" },
 ]
