@@ -39,13 +39,10 @@ def go_intersection():
         elif image.find(R.Map.ButtonGoToSekai):
             logger.debug('Now at real world map.')
             break
-    # 重置试图到右下角
-    COUNT = 3
-    for _ in range(COUNT):
-        device.swipe_scaled(x1=0.8, x2=0.2, y1=0.8, y2=0.2)
-        sleep(1)
     # 进入交叉路口
     device.screenshot()
+    swipe_count = 0
+    MAX_SWIPE_COUNT = 5
     for _ in Loop(interval=0.6):
         if image.find(R.Map.Intersection):
             device.click()
@@ -53,6 +50,13 @@ def go_intersection():
         elif is_at_intersection():
             logger.debug('Now at intersection.')
             break
+        else:
+            # 重置视图到右下角
+            device.swipe_scaled(x1=0.7, x2=0.4, y1=0.5, y2=0.5)
+            swipe_count += 1
+            if swipe_count >= MAX_SWIPE_COUNT:
+                logger.debug('Reached max swipe count but still not found. Stop.')
+                return
 
 @action('打开 CM 界面', screenshot_mode='manual')
 def open_cm() -> bool:
