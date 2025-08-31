@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def start_auto_live(
     auto_setting: Literal['all'] | Literal['once'] | int | None = 'all',
     back_to: Literal['home'] | Literal['select'] | None = 'home',
-    finish_extra_check: Callable[[], bool] | None = None,
+    finish_pre_check: Callable[[], tuple[bool, bool]] | None = None,
 ):
     """
     前置：位于编队界面\n
@@ -34,7 +34,11 @@ def start_auto_live(
         * `"home"`: 返回首页
         * `"select"`: 返回选歌界面
         * `None`: 不返回，直接在 LIVE CLEAR 或「已完成指定次数的演出」画面结束
-    :param finish_extra_check: 结束演出时的额外处理。返回 True 时结束循环。\n
+    :param finish_pre_check:
+        结束演出时的额外处理，在检查循环的开始处调用。返回 `(should_skip, should_break)`。
+        * `should_skip`: 如果 True，则跳过当前循环。
+        * `should_break`: 如果 True，则结束循环。
+        如果 `should_skip` 为 True，则 `should_break` 会被忽略。
     :raises NotImplementedError: 如果未实现的功能被调用。\n
     """
     if auto_setting is None or isinstance(auto_setting, int):
@@ -66,7 +70,7 @@ def start_auto_live(
                 logger.debug('Clicked auto live switch.')
                 sleep(0.3)
     logger.info('Auto live setting finished.')
-    
+
     # 开始并等待完成
     logger.debug('Clicking start live button.')
     device.click(image.expect_wait(R.Live.ButtonStartLive))
@@ -90,11 +94,17 @@ def start_auto_live(
                 logger.debug('Waiting for SCORERANK')
                 sleep(1) # 等待 SCORERANK 动画完成
                 device.click_center()
-                break 
+                break
     if back_to is None:
         return
     # 返回
     for _ in Loop(interval=0.5):
+        if finish_pre_check:
+            should_skip, should_break = finish_pre_check()
+            if should_break:
+                break
+            if should_skip:
+                continue
         # 返回主页只要一直点就可以了
         if back_to == 'home':
             if at_home():
@@ -114,9 +124,6 @@ def start_auto_live(
                 break
             else:
                 logger.debug('Waiting for reward screen finished.')
-            
-        if finish_extra_check and finish_extra_check():
-            break
 
 @action('选歌', screenshot_mode='manual')
 def enter_unit_select():
@@ -276,7 +283,7 @@ def challenge_live(
                 return (R.Live.ChallengeLive.CharaMizuki, R.Live.ChallengeLive.Group25AtNightcord)
             case _ as impossible:
                 assert_never(impossible)
-    
+
     def award_to_res(award: ChallengeLiveAward):
         match award:
             case ChallengeLiveAward.Crystal:
@@ -314,14 +321,16 @@ def challenge_live(
                 device.click()
                 logger.debug('Clicked award.')
                 sleep(0.3)
+                return True, False
         # 确认领取提示
         elif image.find(R.Live.ChallengeLive.TextAwardClaimConfirm):
             if image.find(R.Live.ChallengeLive.ButtonConfirm):
                 device.click()
                 logger.debug('Clicked confirm award claim.')
                 sleep(0.3)
-        return False
-    start_auto_live('once', finish_extra_check=claim_reward)
+                return True, False
+        return False, False
+    start_auto_live('once', finish_pre_check=claim_reward)
 
 @task('单人演出')
 def task_solo_live():
