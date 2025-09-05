@@ -51,7 +51,8 @@ def go_home(threshold_timeout: float = 0):
             cd.reset()
         # 有新需要数据下载
         if image.find(R.Login.TextRecommendDownloadViaWifi):
-            device.click(image.expect(R.Login.ButtonDownload))
+            if image.find(R.Login.ButtonDownload):
+                device.click()
         
         if th.request():
             device.click(1, 1)
