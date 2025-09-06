@@ -4,7 +4,7 @@ import ttkbootstrap as tb
 
 from .index import DesktopApp
 from typing import cast, Literal, Optional
-from iaa.config.schemas import LinkAccountOptions, EmulatorOptions, GameCharacter, ChallengeLiveAward
+from iaa.config.schemas import LinkAccountOptions, EmulatorOptions, GameCharacter, ChallengeLiveAward, CustomEmulatorData
 from .toast import show_toast
 from .advance_select import AdvanceSelect
 from iaa.config.base import IaaConfig
@@ -12,6 +12,7 @@ from iaa.config.base import IaaConfig
 # 显示与值映射
 EMULATOR_DISPLAY_MAP: dict[EmulatorOptions, str] = {
   'mumu': 'MuMu',
+  'custom': '自定义',
 }
 EMULATOR_VALUE_MAP: dict[str, EmulatorOptions] = {v: k for k, v in EMULATOR_DISPLAY_MAP.items()}
 
@@ -41,6 +42,11 @@ class ConfStore:
     self.server_var = tk.StringVar()
     self.link_var = tk.StringVar()
     self.control_impl_var = tk.StringVar()
+    # 自定义模拟器设置
+    self.custom_adb_ip_var = tk.StringVar()
+    self.custom_adb_port_var = tk.StringVar()
+    self.custom_ip_row: Optional[tb.Frame] = None
+    self.custom_port_row: Optional[tb.Frame] = None
     # 演出设置
     self.song_var = tk.StringVar()
     self.fully_deplete_var = tk.BooleanVar()
@@ -68,12 +74,52 @@ def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) 
   store.server_var.set(SERVER_DISPLAY_MAP.get(server_key, '日服'))
   store.link_var.set(LINK_DISPLAY_MAP.get(link_key, '不引继账号'))
   store.control_impl_var.set(CONTROL_IMPL_DISPLAY_MAP.get(control_impl_key, 'Nemu IPC'))
+  # 初始化自定义 ADB 设置
+  custom_data = conf.game.emulator_data
+  if emulator_key == 'custom' and custom_data is not None:
+    store.custom_adb_ip_var.set(custom_data.adb_ip or '127.0.0.1')
+    store.custom_adb_port_var.set(str(custom_data.adb_port or 5555))
+  else:
+    store.custom_adb_ip_var.set('127.0.0.1')
+    store.custom_adb_port_var.set('5555')
 
   # 模拟器类型
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="模拟器类型", width=16, anchor=tk.W).pack(side=tk.LEFT)
   tb.Combobox(row, state="readonly", textvariable=store.emulator_var, values=list(EMULATOR_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
+
+  # 自定义 ADB IP（仅在选择“自定义”时显示）
+  custom_ip_row = tb.Frame(frame)
+  store.custom_ip_row = custom_ip_row
+  tb.Label(custom_ip_row, text="ADB IP", width=16, anchor=tk.W).pack(side=tk.LEFT)
+  tb.Entry(custom_ip_row, textvariable=store.custom_adb_ip_var, width=30).pack(side=tk.LEFT)
+
+  # 自定义 ADB 端口（仅在选择“自定义”时显示）
+  custom_port_row = tb.Frame(frame)
+  store.custom_port_row = custom_port_row
+  tb.Label(custom_port_row, text="ADB 端口", width=16, anchor=tk.W).pack(side=tk.LEFT)
+  tb.Entry(custom_port_row, textvariable=store.custom_adb_port_var, width=30).pack(side=tk.LEFT)
+
+  def _update_custom_rows(*_args) -> None:
+    emu_val = EMULATOR_VALUE_MAP.get(store.emulator_var.get(), 'mumu')
+    if emu_val == 'custom':
+      if store.custom_ip_row:
+        store.custom_ip_row.pack(fill=tk.X, padx=8, pady=8)
+      if store.custom_port_row:
+        store.custom_port_row.pack(fill=tk.X, padx=8, pady=8)
+    else:
+      if store.custom_ip_row:
+        store.custom_ip_row.pack_forget()
+      if store.custom_port_row:
+        store.custom_port_row.pack_forget()
+
+  # 监听选择变化并初始化显示
+  try:
+    store.emulator_var.trace_add('write', lambda *_: _update_custom_rows())
+  except Exception:
+    pass
+  _update_custom_rows()
 
   # 服务器
   row = tb.Frame(frame)
@@ -91,7 +137,7 @@ def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) 
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="控制方式", width=16, anchor=tk.W).pack(side=tk.LEFT)
-  tb.Combobox(row, state="readonly", textvariable=store.control_impl_var, values=list(CONTROL_IMPL_VALUE_MAP.keys()), width=28).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.control_impl_var, values=list(CONTROL_IMPL_DISPLAY_MAP.keys()), width=28).pack(side=tk.LEFT)
 
 
 def build_live_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) -> None:
@@ -156,7 +202,7 @@ def build_challenge_live_config_group(parent: tk.Misc, conf: IaaConfig, store: C
   # 奖励优先设置
   award_display_map = ChallengeLiveAward.display_map_cn()
   store.challenge_award_display_to_value = {v: k for k, v in award_display_map.items()}
-  current_award_display = award_display_map.get(getattr(conf.challenge_live, 'award', ChallengeLiveAward.Crystal), "水晶")
+  current_award_display = award_display_map.get(conf.challenge_live.award, "水晶")
 
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
@@ -253,6 +299,16 @@ def build_settings_tab(app: DesktopApp, parent: tk.Misc) -> None:  # noqa: ARG00
       conf.game.server = server_val
       conf.game.link_account = link_val
       conf.game.control_impl = control_impl_val
+      # 自定义模拟器数据
+      if emulator_val == 'custom':
+        ip = (store.custom_adb_ip_var.get() or '').strip() or '127.0.0.1'
+        try:
+          port = int((store.custom_adb_port_var.get() or '').strip() or '5555')
+        except Exception:
+          port = 5555
+        conf.game.emulator_data = CustomEmulatorData(adb_ip=ip, adb_port=port)
+      else:
+        conf.game.emulator_data = None
 
       # 演出设置
       song_display = store.song_var.get()
