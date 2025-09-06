@@ -40,9 +40,11 @@ def enter_story():
             # 尝试点进最上面一话
             device.click(R.Story.PointFirstEpisode)
 
-@action('连续跳过剧情')
+@action('跳过剧情')
 def skip_stories(mode: SkipMode = 'skip'):
     """
+    跳过剧情。同时支持单集阅读模式与连续阅读模式。
+    
     前置：位于剧情阅读界面\n
     结束：剧情列表界面
 

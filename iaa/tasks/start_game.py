@@ -5,6 +5,7 @@ from kotonebot.util import Throttler, Countdown
 from iaa.config.schemas import LinkAccountOptions
 from iaa.consts import PACKAGE_NAME_JP
 from iaa.context import conf
+from ._fragments import handle_data_download
 from . import R
 
 logger = logging.getLogger(__name__)
@@ -50,9 +51,8 @@ def go_home(threshold_timeout: float = 0):
         else:
             cd.reset()
         # 有新需要数据下载
-        if image.find(R.Login.TextRecommendDownloadViaWifi):
-            if image.find(R.Login.ButtonDownload):
-                device.click()
+        if handle_data_download():
+            continue
         
         if th.request():
             device.click(1, 1)

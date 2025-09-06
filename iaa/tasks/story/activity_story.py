@@ -5,6 +5,7 @@ from iaa.tasks.common import has_red_dot
 
 from .. import R
 from ..start_game import go_home
+from .._fragments import handle_data_download
 from ._common import enter_story, skip_stories
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,11 @@ def go_activity_story():
     """
     go_home()
     for _ in Loop():
+        # 新开活动，第一次进入，会弹出数据下载
+        if handle_data_download():
+            # 第一次进入会自动阅读第一话
+            skip_stories(mode='skip')
+            continue
         if image.find(R.Hud.ButtonLive):
             device.click()
             logger.debug('Clicked live button.')
