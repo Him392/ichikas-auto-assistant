@@ -104,15 +104,15 @@ def clear_common_cm():
     for _ in Loop(interval=0.6):
         if state == 1:
             # 开始看
-            if image.find(R.Cm.ButtonPlayCm):
-                device.click()
-                logger.debug('Clicked CM start button.')
-                sleep(0.2)
-            elif image.find(R.Cm.ButtonCmStart, threshold=0.7):
+            if image.find(R.Cm.ButtonCmStart, threshold=0.7):
                 device.click()
                 logger.debug('Clicked 視聴開始 button.')
                 sleep(1)
                 state = 2
+            elif image.find(R.Cm.ButtonPlayCm):
+                device.click()
+                logger.debug('Clicked CM start button.')
+                sleep(0.2)
             # 没有剩余广告了
             else:
                 logger.info('All ads cleared.')
