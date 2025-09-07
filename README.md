@@ -59,6 +59,8 @@ uv run iaa/main.py
 ## 开发
 TODO
 
+（暂时可以参考 琴音小助手 的开发文档）
+
 ## 贡献
 TODO
 
