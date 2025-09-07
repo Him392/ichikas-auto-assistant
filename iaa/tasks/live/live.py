@@ -2,13 +2,11 @@ from typing import Callable, Literal
 from typing_extensions import assert_never
 
 from kotonebot import logging
-from kotonebot import device, image, task, Loop, action, sleep, color
-
+from kotonebot import device, image, Loop, action, sleep, color
 
 from .. import R
 from ..common import at_home
 from iaa.context import conf
-from ..start_game import go_home
 from ._select_song import next_song
 from ._scene import at_song_select
 from iaa.config.schemas import ChallengeLiveAward, GameCharacter
@@ -331,19 +329,3 @@ def challenge_live(
                 return True, False
         return False, False
     start_auto_live('once', finish_pre_check=claim_reward)
-
-@task('单人演出')
-def task_solo_live():
-    go_home()
-    solo_live('single-loop')
-
-@task('挑战演出')
-def task_challenge_live():
-    go_home()
-    challenge_live(conf().challenge_live.characters[0])
-
-@task('演出')
-def live():
-    go_home()
-    solo_live()
-    challenge_live(GameCharacter.Ichika)

@@ -159,22 +159,51 @@ class SchedulerService:
         from kotonebot.backend.context.context import init_context
         from kotonebot.client.host import Mumu12Host
         impl = self.iaa.config.conf.game.control_impl
+        emulator = self.iaa.config.conf.game.emulator
 
-        hosts = Mumu12Host.list()
-        if not hosts:
-            raise RuntimeError("No MuMu host found.")
-        host = hosts[0]
-        if impl == 'nemu_ipc':
-            from kotonebot.client.host.mumu12_host import MuMu12HostConfig
-            device = host.create_device('nemu_ipc', MuMu12HostConfig())
-        elif impl == 'adb':
+        if emulator == 'mumu':
+            hosts = Mumu12Host.list()
+            if not hosts:
+                raise RuntimeError("No MuMu host found.")
+            host = hosts[0]
+            if impl == 'nemu_ipc':
+                from kotonebot.client.host.mumu12_host import MuMu12HostConfig
+                device = host.create_device('nemu_ipc', MuMu12HostConfig())
+            elif impl == 'adb':
+                from kotonebot.client.host import AdbHostConfig
+                device = host.create_device('adb', AdbHostConfig())
+            elif impl == 'uiautomator':
+                from kotonebot.client.host import AdbHostConfig
+                device = host.create_device('uiautomator2', AdbHostConfig())
+            else:
+                raise ValueError(f"Unknown control implementation: {impl}")
+        elif emulator == 'custom':
+            from kotonebot.client.host import create_custom
             from kotonebot.client.host import AdbHostConfig
-            device = host.create_device('adb', AdbHostConfig())
-        elif impl == 'uiautomator':
-            from kotonebot.client.host import AdbHostConfig
-            device = host.create_device('uiautomator2', AdbHostConfig())
+            data = self.iaa.config.conf.game.emulator_data
+            if data is None:
+                adb_ip = '127.0.0.1'
+                adb_port = 5555
+            else:
+                adb_ip = data.adb_ip or '127.0.0.1'
+                adb_port = data.adb_port or 5555
+            instance = create_custom(
+                adb_ip=adb_ip,
+                adb_port=adb_port,
+                adb_name="",
+                exe_path="",
+                emulator_args="",
+            )
+            if impl == 'adb':
+                device = instance.create_device('adb', AdbHostConfig())
+            elif impl == 'uiautomator':
+                device = instance.create_device('uiautomator2', AdbHostConfig())
+            elif impl == 'nemu_ipc':
+                raise ValueError("'nemu_ipc' 实现仅支持 MuMu12，不支持 custom 模拟器。")
+            else:
+                raise ValueError(f"Unknown control implementation: {impl}")
         else:
-            raise ValueError(f"Unknown control implementation: {impl}")
+            raise ValueError(f"Unknown emulator: {emulator}")
         device.target_resolution = (1280, 720)
         device.orientation = 'landscape'
         init_context(target_device=device)

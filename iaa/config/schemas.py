@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing_extensions import assert_never
 
 LinkAccountOptions = Literal['no', 'google_play']
-EmulatorOptions = Literal['mumu']
+EmulatorOptions = Literal['mumu', 'custom']
 
 
 class GameCharacter(str, Enum):
@@ -271,11 +271,17 @@ class ChallengeLiveAward(str, Enum):
         }
 
 
+class CustomEmulatorData(BaseModel):
+    adb_ip: str = '127.0.0.1'
+    adb_port: int = 5555
+
+
 class GameConfig(BaseModel):
     server: Literal['jp'] = 'jp'
     link_account: LinkAccountOptions = 'no'
     emulator: EmulatorOptions = 'mumu'
     control_impl: Literal['nemu_ipc', 'adb', 'uiautomator'] = 'nemu_ipc'
+    emulator_data: CustomEmulatorData | None = None
     """
     是否引继账号。
     
@@ -323,6 +329,7 @@ class SchedulerConfig(BaseModel):
         - "cm"
         - "solo_live"
         - "challenge_live"
+        - "activity_story"
         """
         if task_id == 'start_game':
             return bool(self.start_game_enabled)
