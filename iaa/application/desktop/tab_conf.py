@@ -137,7 +137,7 @@ def build_game_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) 
   row = tb.Frame(frame)
   row.pack(fill=tk.X, padx=8, pady=8)
   tb.Label(row, text="控制方式", width=16, anchor=tk.W).pack(side=tk.LEFT)
-  tb.Combobox(row, state="readonly", textvariable=store.control_impl_var, values=list(CONTROL_IMPL_DISPLAY_MAP.keys()), width=28).pack(side=tk.LEFT)
+  tb.Combobox(row, state="readonly", textvariable=store.control_impl_var, values=list(CONTROL_IMPL_DISPLAY_MAP.values()), width=28).pack(side=tk.LEFT)
 
 
 def build_live_config_group(parent: tk.Misc, conf: IaaConfig, store: ConfStore) -> None:
